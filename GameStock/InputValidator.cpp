@@ -36,3 +36,25 @@ std::vector<WORD> validate::get_valid_key_events() {
 	vec_valid_key_events.push_back(VK_ESCAPE);
 	return vec_valid_key_events;
 }
+
+std::string validate::validate_string() {
+	std::string strInput;
+	std::getline(std::cin, strInput);
+	return strInput;
+}
+
+int validate::validate_int() {
+	std::string strInput;
+	int iInput;
+
+	while (true) {
+		std::getline(std::cin, strInput);
+		try {
+			iInput = std::stoi(strInput);
+			return iInput;
+		}
+		catch (std::exception) {
+			std::cout << "Not a valid whole number: ";
+		}
+	}
+}

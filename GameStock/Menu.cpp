@@ -53,9 +53,10 @@ void MenuContainer::add_menu_item(std::unique_ptr<MenuItem> item) {
 	_vecMenuItems.push_back(std::move(item));
 };
 
-GeneralMenuItem::GeneralMenuItem(std::string output)
+GeneralMenuItem::GeneralMenuItem(std::string output, ClassContainer* ptr_class_container)
 {
 	_output = output;
+	_ptr_class_container = ptr_class_container;
 };
 
 void DummyMenu::execute() {
@@ -64,10 +65,83 @@ void DummyMenu::execute() {
 	util::pause();
 }
 
+void LoginMenu::execute() {
+	User obj_user;
+
+	system("cls");
+	std::cout << "Follow the prompts to login to GameStock.\n";
+
+	std::cout << "Please enter your email: ";
+	obj_user.set_email(validate::validate_string());
+
+	std::cout << "Please enter your password: ";
+	obj_user.set_password(validate::validate_string());
+
+	try {
+		_ptr_class_container->ptr_user_manager->attempt_login(&obj_user);
+
+		MenuContainer objMenuContainer = MenuContainer("Logged in as " + obj_user.get_email() + ".\nChoose one of the below options.\n(Esc to logout)\n");
+		objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 1", _ptr_class_container)));
+		objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 2", _ptr_class_container)));
+
+		while (!objMenuContainer.get_exit_menu()) {
+			system("cls");
+			objMenuContainer.execute();
+		}
+
+		_ptr_class_container->ptr_user_manager->logout();
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		std::cout << "\nPlease try again.\n";
+		util::pause();
+	}
+}
+
+void RegisterMenu::execute() {
+	User obj_user;
+	std::string str_password_confirm = "";
+
+	system("cls");
+	std::cout << "Follow the prompts to register as a new user.\n";
+	std::cout << "Please enter your full name: ";
+	obj_user.set_full_name(validate::validate_string());
+
+	std::cout << "Please enter your age: ";
+	obj_user.set_age(validate::validate_int());
+
+	std::cout << "Please enter your email: ";
+	obj_user.set_email(validate::validate_string());
+
+	std::cout << "Please enter your password: ";
+	obj_user.set_password(validate::validate_string());
+
+	std::cout << "Please confirm your password: ";
+	str_password_confirm = validate::validate_string();
+
+	while (str_password_confirm != obj_user.get_password()) {
+		std::cout << "Passwords do not match, please confirm your password: ";
+		str_password_confirm = validate::validate_string();
+	}
+
+	try {
+		_ptr_class_container->ptr_user_manager->register_user(&obj_user);
+
+		std::cout << "\nRegistration complete. User name is " << obj_user.get_email() << ".\nPlease now attempt to log in on the next screen.\n";
+
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		std::cout << "\nCould not register: " << ex.what() << "\n";
+		std::cout << "\nPlease try again.\n";
+		util::pause();
+	}
+}
+
 void SubMenuExample::execute() {
 	MenuContainer objMenuContainer = MenuContainer("Sub menu example.\nChoose one of the below options.\n");
-	objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 1")));
-	objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 2")));
+	objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 1", _ptr_class_container)));
+	objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 2", _ptr_class_container)));
 
 	while (!objMenuContainer.get_exit_menu()) {
 		system("cls");

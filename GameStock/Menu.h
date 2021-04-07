@@ -5,6 +5,8 @@
 #include <Windows.h>
 #include "Utilities.h"
 #include "InputValidator.h"
+#include "User.h"
+#include "ClassContainer.h"
 
 class MenuItem {
 public:
@@ -32,20 +34,40 @@ public:
 class GeneralMenuItem : public MenuItem {
 private:
     std::string _output;
+protected:
+    ClassContainer* _ptr_class_container;
 public:
-    GeneralMenuItem(std::string output);
+    GeneralMenuItem(std::string output, ClassContainer* ptr_class_container);
     std::string item_text() const { return _output; }
 };
 
 class DummyMenu : public GeneralMenuItem {
 public:
-    DummyMenu(std::string output) : GeneralMenuItem(output) {};
+    DummyMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+/// <summary>
+/// Allows a user to attempt to login to the system.
+/// </summary>
+class LoginMenu : public GeneralMenuItem {
+public:
+    LoginMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+/// <summary>
+/// The menu item that when executed allows a user to register a new user
+/// </summary>
+class RegisterMenu : public GeneralMenuItem {
+public:
+    RegisterMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
 class SubMenuExample : public GeneralMenuItem {
 public:
-    SubMenuExample(std::string output) : GeneralMenuItem(output) {};
+    SubMenuExample(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
