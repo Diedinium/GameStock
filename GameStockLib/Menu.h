@@ -65,6 +65,12 @@ public:
     void execute();
 };
 
+class ViewGamesMenu : public GeneralMenuItem {
+public:
+    ViewGamesMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
 class SubMenuExample : public GeneralMenuItem {
 public:
     SubMenuExample(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};

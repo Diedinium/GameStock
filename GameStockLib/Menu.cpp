@@ -78,18 +78,17 @@ void LoginMenu::execute() {
 	obj_user.set_password(validate::validate_string());
 
 	try {
-		_ptr_class_container->ptr_user_manager->attempt_login(&obj_user);
+		_ptr_class_container->ptr_user_manager.attempt_login(&obj_user);
 
 		MenuContainer objMenuContainer = MenuContainer("Logged in as " + obj_user.get_email() + ".\nChoose one of the below options.\n(Esc to logout)\n");
-		objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 1", _ptr_class_container)));
-		objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 2", _ptr_class_container)));
+		objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new ViewGamesMenu("View games", _ptr_class_container)));
 
 		while (!objMenuContainer.get_exit_menu()) {
 			system("cls");
 			objMenuContainer.execute();
 		}
 
-		_ptr_class_container->ptr_user_manager->logout();
+		_ptr_class_container->ptr_user_manager.logout();
 	}
 	catch (std::exception& ex) {
 		std::cout << "Error: " << ex.what() << "\n";
@@ -125,7 +124,7 @@ void RegisterMenu::execute() {
 	}
 
 	try {
-		_ptr_class_container->ptr_user_manager->register_user(&obj_user);
+		_ptr_class_container->ptr_user_manager.register_user(&obj_user);
 
 		std::cout << "\nRegistration complete. User name is " << obj_user.get_email() << ".\nPlease now attempt to log in on the next screen.\n";
 
@@ -134,6 +133,68 @@ void RegisterMenu::execute() {
 	catch (std::exception& ex) {
 		std::cout << "\nCould not register: " << ex.what() << "\n";
 		std::cout << "\nPlease try again.\n";
+		util::pause();
+	}
+}
+
+void ViewGamesMenu::execute() {
+	try {
+		_ptr_class_container->ptr_game_manager.get_games();
+		std::vector<Game> vec_games = _ptr_class_container->ptr_game_manager.get_vec_games();
+
+		KEY_EVENT_RECORD key{};
+		int i_highlighted_index = 0;
+		HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
+		HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+
+		while (key.wVirtualKeyCode != VK_RETURN) {
+			system("cls");
+			std::cout << "Current games in stock at GameStock\n";
+			std::cout << "Press [Enter] to select game to buy\n";
+			std::cout << "Press [Arrow Keys] to navigate games/pages\n";
+			std::cout << "Press [Esc] to cancel go back\n";
+			std::cout << "Press [F1] to view basket\n\n";
+
+			util::output_games_header();
+
+			util::for_each_iterator(vec_games.begin(), vec_games.end(), 0, [&](int index, Game& item) {
+				if (i_highlighted_index == index) {
+					SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
+					util::output_game(item);
+					SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+				}
+				else {
+					util::output_game(item);
+				}
+			});
+			while (!validate::get_control_char(key, h_input_console));
+			if (key.wVirtualKeyCode == VK_DOWN) {
+				if (i_highlighted_index < (int)vec_games.size() - 1) i_highlighted_index++;
+			}
+			else if (key.wVirtualKeyCode == VK_UP) {
+				if (i_highlighted_index > 0) i_highlighted_index--;
+			}
+			else if (key.wVirtualKeyCode == VK_ESCAPE) {
+				break;
+			}
+		}
+
+		if ((int)vec_games.size() > i_highlighted_index && i_highlighted_index >= 0) {
+			if (key.wVirtualKeyCode != VK_ESCAPE) {
+				system("cls");
+				std::cout << "Cleared screen, do something here :)\n";
+				std::cout << "Selected game: \n\n";
+				util::output_game(vec_games[i_highlighted_index]);
+				util::pause();
+			}
+		}
+		else {
+			std::cout << "Not a valid option, please try again.\n";
+			util::pause();
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
 		util::pause();
 	}
 }

@@ -3,6 +3,7 @@
 #include "Menu.h"
 #include "DatabaseManager.h"
 #include "UserManager.h"
+#include "GameManager.h"
 #include "ClassContainer.h"
 
 int main()
@@ -28,8 +29,9 @@ int main()
 	}
 
 	UserManager obj_user_manager = UserManager(obj_database_manager.get_database());
+	GameManager obj_game_manager = GameManager(obj_database_manager.get_database());
 
-	ClassContainer class_container = { &obj_database_manager, &obj_user_manager };
+	ClassContainer class_container = { obj_database_manager, obj_user_manager, obj_game_manager };
 
 	MenuContainer objMenuContainer = MenuContainer("Welcome to GameStock.\nChoose one of the below options.\n(Esc to exit)\n");
 	objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new LoginMenu("Login", &class_container)));

@@ -1,6 +1,9 @@
 #pragma once
 #include <iostream>
+#include <iomanip>
 #include <conio.h>
+#include <vector>
+#include "Game.h"
 
 namespace util {
 	template <typename IteratorT, typename FunctionT>
@@ -9,6 +12,9 @@ namespace util {
 			func(initial, *first);
 		return func;
 	}
+
+	void output_games_header();
+	void output_game(Game&);
 
 	void pause();
 }
