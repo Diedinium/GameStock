@@ -11,7 +11,7 @@ class DatabaseManager
 	void ensure_directory_exists();
 public:
 	DatabaseManager();
-	void create_database(std::string str_db_name);
+	void connect(std::string str_db_name);
 	void create_tables_if_not_exist();
 	void insert_initial();
 

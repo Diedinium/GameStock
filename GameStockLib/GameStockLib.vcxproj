@@ -21,8 +21,12 @@
   <ItemGroup>
     <ClInclude Include="ClassContainer.h" />
     <ClInclude Include="DatabaseManager.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GameManager.h" />
+    <ClInclude Include="Genre.h" />
     <ClInclude Include="InputValidator.h" />
     <ClInclude Include="Menu.h" />
+    <ClInclude Include="Rating.h" />
     <ClInclude Include="sqlite3.h" />
     <ClInclude Include="sqlite3ext.h" />
     <ClInclude Include="User.h" />
@@ -31,8 +35,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DatabaseManager.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameManager.cpp" />
+    <ClCompile Include="Genre.cpp" />
     <ClCompile Include="InputValidator.cpp" />
     <ClCompile Include="Menu.cpp" />
+    <ClCompile Include="Rating.cpp" />
     <ClCompile Include="sqlite3.c" />
     <ClCompile Include="User.cpp" />
     <ClCompile Include="UserManager.cpp" />

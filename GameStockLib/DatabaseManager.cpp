@@ -11,7 +11,7 @@ void DatabaseManager::ensure_directory_exists() {
 	}
 }
 
-void DatabaseManager::create_database(std::string str_db_name) {
+void DatabaseManager::connect(std::string str_db_name) {
 	std::filesystem::path db_path = _database_path /= str_db_name;
 	_i_return_code = sqlite3_open(db_path.string().c_str(), &_db);
 }

@@ -69,7 +69,7 @@ void LoginMenu::execute() {
 	User obj_user;
 
 	system("cls");
-	std::cout << "Follow the prompts to login to GameStock.\n";
+	std::cout << "Follow the prompts to login to GameStock.\n\n";
 
 	std::cout << "Please enter your email: ";
 	obj_user.set_email(validate::validate_string());
@@ -103,7 +103,7 @@ void RegisterMenu::execute() {
 	std::string str_password_confirm = "";
 
 	system("cls");
-	std::cout << "Follow the prompts to register as a new user.\n";
+	std::cout << "Follow the prompts to register as a new user.\n\n";
 	std::cout << "Please enter your full name: ";
 	obj_user.set_full_name(validate::validate_string());
 
