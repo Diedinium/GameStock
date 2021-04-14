@@ -6,7 +6,9 @@
 #include "Utilities.h"
 #include "InputValidator.h"
 #include "User.h"
+#include "PurchaseItem.h"
 #include "ClassContainer.h"
+#include "Game.h"
 
 class MenuItem {
 public:
@@ -65,9 +67,32 @@ public:
     void execute();
 };
 
+/// <summary>
+/// When executed displays the current games to a user/administrator and allows various forms of interaction with the listed games.
+/// </summary>
 class ViewGamesMenu : public GeneralMenuItem {
 public:
     ViewGamesMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+/// <summary>
+/// Displays the users current basket along with options to perform on the basket.
+/// </summary>
+class ViewBasketMenu : public GeneralMenuItem {
+public:
+    ViewBasketMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+/// <summary>
+/// Base menu of other menus related to game management, and displays these other menus upon execution.
+/// </summary>
+class ManageGameBaseMenu : public GeneralMenuItem {
+protected:
+    Game& _obj_game;
+public:
+    ManageGameBaseMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : GeneralMenuItem(output, ptr_class_container), _obj_game(obj_game) {};
     void execute();
 };
 

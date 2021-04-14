@@ -26,6 +26,8 @@
     <ClInclude Include="Genre.h" />
     <ClInclude Include="InputValidator.h" />
     <ClInclude Include="Menu.h" />
+    <ClInclude Include="Purchase.h" />
+    <ClInclude Include="PurchaseItem.h" />
     <ClInclude Include="Rating.h" />
     <ClInclude Include="sqlite3.h" />
     <ClInclude Include="sqlite3ext.h" />
@@ -40,6 +42,8 @@
     <ClCompile Include="Genre.cpp" />
     <ClCompile Include="InputValidator.cpp" />
     <ClCompile Include="Menu.cpp" />
+    <ClCompile Include="Purchase.cpp" />
+    <ClCompile Include="PurchaseItem.cpp" />
     <ClCompile Include="Rating.cpp" />
     <ClCompile Include="sqlite3.c" />
     <ClCompile Include="User.cpp" />

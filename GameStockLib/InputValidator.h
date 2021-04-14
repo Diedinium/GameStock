@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include "Utilities.h"
 
 namespace validate {
 	/// <summary>
@@ -27,9 +28,24 @@ namespace validate {
 	std::string validate_string();
 
 	/// <summary>
+	/// Gets user input as a string, but checks that it is above a specified minimum length
+	/// </summary>
+	/// <param name=""></param>
+	/// <returns></returns>
+	std::string validate_string(int);
+
+	/// <summary>
 	/// Validates that user input is an integer value.
 	/// </summary>
 	/// <returns></returns>
 	int validate_int();
+
+	/// <summary>
+	/// Validates that a user input is an int and between or equal to specified min and maximum values
+	/// </summary>
+	/// <param name=""></param>
+	/// <param name=""></param>
+	/// <returns></returns>
+	int validate_int(int, int);
 };
 
