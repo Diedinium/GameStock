@@ -64,6 +64,23 @@ std::string validate::validate_string(int min_length) {
 	}
 }
 
+std::string validate::validate_string(int max_length, bool max_flag) {
+	std::string strInput;
+
+	while (true) {
+		std::string strMessage = "Not a valid number";
+		std::getline(std::cin, strInput);
+
+		if (util::is_more_than_or_equal_to(strInput.length(), (size_t)max_length)) {
+			strMessage = "To long, max length is " + std::to_string(max_length);
+			std::cout << strMessage << ", try again: ";
+		}
+		else {
+			return strInput;
+		}
+	}
+}
+
 int validate::validate_int() {
 	std::string strInput;
 	int iInput;
@@ -73,6 +90,28 @@ int validate::validate_int() {
 		try {
 			iInput = std::stoi(strInput);
 			return iInput;
+		}
+		catch (std::exception) {
+			std::cout << "Not a valid whole number: ";
+		}
+	}
+}
+
+int validate::validate_int(int min_size) {
+	std::string strInput;
+	int iInput;
+
+	while (true) {
+		std::getline(std::cin, strInput);
+		try {
+			iInput = std::stoi(strInput);
+
+			if (util::is_less_than(iInput, min_size)) {
+				std::cout << "Input cannot be less than" << min_size << ": ";
+			}
+			else {
+				return iInput;
+			}
 		}
 		catch (std::exception) {
 			std::cout << "Not a valid whole number: ";
@@ -94,6 +133,45 @@ int validate::validate_int(int min_size, int max_size) {
 			}
 			else {
 				return iInput;
+			}
+		}
+		catch (std::exception) {
+			std::cout << "Not a valid number: ";
+		}
+	}
+}
+
+double validate::validate_double() {
+	std::string strInput;
+	double dInput;
+
+	while (true) {
+		std::getline(std::cin, strInput);
+		try {
+			dInput = std::stod(strInput);
+
+			return dInput;
+		}
+		catch (std::exception) {
+			std::cout << "Not a valid number: ";
+		}
+	}
+}
+
+double validate::validate_double(double min_size) {
+	std::string strInput;
+	double dInput;
+
+	while (true) {
+		std::getline(std::cin, strInput);
+		try {
+			dInput = std::stod(strInput);
+
+			if (util::is_less_than_or_equal_to(dInput, min_size)) {
+				std::cout << "Input cannot be " << std::setprecision(2) << min_size << " or less: ";
+			}
+			else {
+				return dInput;
 			}
 		}
 		catch (std::exception) {

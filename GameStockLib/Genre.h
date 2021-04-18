@@ -6,8 +6,8 @@ class Genre {
 	std::string _str_genre;
 public:
 	Genre();
-	Genre(std::string);
-	Genre(int, std::string);
+	Genre(std::string str_genre);
+	Genre(int i_id, std::string str_genre);
 
 	int get_id() { return _i_id; }
 	void set_id(int i_id) { _i_id = i_id; }

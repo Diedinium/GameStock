@@ -20,7 +20,11 @@ int GameManager::get_games() {
 	int i_return_code;
 	sqlite3_stmt* stmt_games;
 
-	std::string str_status_sql = "SELECT g.id, g.name, r.id as rating_id, r.rating, x.id as genre_id, x.genre, g.price, g.copies FROM games AS g LEFT JOIN ratings AS r on g.genre_id = r.id LEFT JOIN genres as x ON g.genre_id = x.id WHERE g.copies > 0";
+	std::string str_status_sql = "SELECT g.id, g.name, r.id as rating_id, r.rating, x.id as genre_id, x.genre, g.price, g.copies FROM games AS g LEFT JOIN ratings AS r on g.age_rating = r.id LEFT JOIN genres as x ON g.genre_id = x.id WHERE g.copies > 0";
+
+	if (_bool_admin_flag) {
+		str_status_sql = "SELECT g.id, g.name, r.id as rating_id, r.rating, x.id as genre_id, x.genre, g.price, g.copies FROM games AS g LEFT JOIN ratings AS r on g.age_rating = r.id LEFT JOIN genres as x ON g.genre_id = x.id";
+	}
 
 	sqlite3_prepare_v2(_db, str_status_sql.c_str(), -1, &stmt_games, NULL);
 	while ((i_return_code = sqlite3_step(stmt_games)) == SQLITE_ROW) {
@@ -76,4 +80,186 @@ void GameManager::remove_basket_item(int i_game_id) {
 	else {
 		throw std::invalid_argument("Cannot remove game with id of " + std::to_string(i_game_id) + " from basket, item not found in basket.");
 	}
+}
+
+void GameManager::update_game_name(int i_game_id, std::string str_game_name) {
+	sqlite3_stmt* stmt_update_name;
+
+	std::string str_update_name_sql = "UPDATE games SET name = ? WHERE id = ?";
+
+	if (sqlite3_prepare_v2(_db, str_update_name_sql.c_str(), -1, &stmt_update_name, NULL) != SQLITE_OK) {
+		std::string str_error_msg = "Failed to prepare update statement: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_text(stmt_update_name, 1, str_game_name.c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding name: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_int(stmt_update_name, 2, i_game_id) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding game id: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_step(stmt_update_name) != SQLITE_DONE) {
+		throw new std::runtime_error("Something went wrong while performing this update, please try again.");
+	}
+
+	sqlite3_finalize(stmt_update_name);
+}
+
+void GameManager::update_game_genre(int i_game_id, int i_genre_id) {
+	sqlite3_stmt* stmt_update_genre;
+
+	std::string str_update_name_sql = "UPDATE games SET genre_id = ? WHERE id = ?";
+
+	if (sqlite3_prepare_v2(_db, str_update_name_sql.c_str(), -1, &stmt_update_genre, NULL) != SQLITE_OK) {
+		std::string str_error_msg = "Failed to prepare update statement: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_int(stmt_update_genre, 1, i_genre_id) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding genre: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_int(stmt_update_genre, 2, i_game_id) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding game id: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_step(stmt_update_genre) != SQLITE_DONE) {
+		throw new std::runtime_error("Something went wrong while performing this update, please try again.");
+	}
+
+	sqlite3_finalize(stmt_update_genre);
+}
+
+void GameManager::update_game_price(int i_game_id, double d_price) {
+	sqlite3_stmt* stmt_update_price;
+
+	std::string str_update_name_sql = "UPDATE games SET price = ? WHERE id = ?";
+
+	if (sqlite3_prepare_v2(_db, str_update_name_sql.c_str(), -1, &stmt_update_price, NULL) != SQLITE_OK) {
+		std::string str_error_msg = "Failed to prepare update statement: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_double(stmt_update_price, 1, d_price) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding price: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_int(stmt_update_price, 2, i_game_id) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding game id: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_step(stmt_update_price) != SQLITE_DONE) {
+		throw new std::runtime_error("Something went wrong while performing this update, please try again.");
+	}
+
+	sqlite3_finalize(stmt_update_price);
+}
+
+void GameManager::update_game_rating(int i_game_id, int i_rating_id) {
+	sqlite3_stmt* stmt_update_rating;
+
+	std::string str_update_name_sql = "UPDATE games SET age_rating = ? WHERE id = ?";
+
+	if (sqlite3_prepare_v2(_db, str_update_name_sql.c_str(), -1, &stmt_update_rating, NULL) != SQLITE_OK) {
+		std::string str_error_msg = "Failed to prepare update statement: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_int(stmt_update_rating, 1, i_rating_id) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding rating: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_int(stmt_update_rating, 2, i_game_id) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding game id: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_step(stmt_update_rating) != SQLITE_DONE) {
+		throw new std::runtime_error("Something went wrong while performing this update, please try again.");
+	}
+
+	sqlite3_finalize(stmt_update_rating);
+}
+
+void GameManager::update_game_copies(int i_game_id, int i_copies) {
+	sqlite3_stmt* stmt_update_copies;
+
+	std::string str_update_name_sql = "UPDATE games SET copies = ? WHERE id = ?";
+
+	if (sqlite3_prepare_v2(_db, str_update_name_sql.c_str(), -1, &stmt_update_copies, NULL) != SQLITE_OK) {
+		std::string str_error_msg = "Failed to prepare update statement: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_int(stmt_update_copies, 1, i_copies) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding copies: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_bind_int(stmt_update_copies, 2, i_game_id) != SQLITE_OK) {
+		std::string str_error_msg = "Error while binding game id: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	if (sqlite3_step(stmt_update_copies) != SQLITE_DONE) {
+		throw new std::runtime_error("Something went wrong while performing this update, please try again.");
+	}
+
+	sqlite3_finalize(stmt_update_copies);
+}
+
+const std::vector<Rating> GameManager::get_ratings() {
+	std::vector<Rating> vec_ratings;
+
+	sqlite3_stmt* stmt_ratings;
+
+	std::string str_sql = "SELECT * FROM ratings";
+
+	sqlite3_prepare_v2(_db, str_sql.c_str(), -1, &stmt_ratings, NULL);
+	while (sqlite3_step(stmt_ratings) == SQLITE_ROW) {
+		vec_ratings.push_back(Rating(sqlite3_column_int(stmt_ratings, 0), (char*)sqlite3_column_text(stmt_ratings, 1)));
+	}
+
+	sqlite3_finalize(stmt_ratings);
+	return vec_ratings;
+}
+
+const std::vector<Genre> GameManager::get_genres() {
+	std::vector<Genre> vec_genres;
+
+	sqlite3_stmt* stmt_genres;
+
+	std::string str_sql = "SELECT * FROM genres ORDER BY genre";
+
+	sqlite3_prepare_v2(_db, str_sql.c_str(), -1, &stmt_genres, NULL);
+	while (sqlite3_step(stmt_genres) == SQLITE_ROW) {
+		vec_genres.push_back(Genre(sqlite3_column_int(stmt_genres, 0), (char*)sqlite3_column_text(stmt_genres, 1)));
+	}
+
+	sqlite3_finalize(stmt_genres);
+	return vec_genres;
 }

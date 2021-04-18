@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include "sqlite3.h"
 #include "Game.h"
+#include "Rating.h"
+#include "Genre.h"
 #include "Purchase.h"
 #include "PurchaseItem.h"
 
@@ -13,6 +15,7 @@ class GameManager
 	std::vector<Game> _vec_games;
 	Purchase _obj_basket;
 	bool _bool_initialised = false;
+	bool _bool_admin_flag = false;
 	int get_games();
 public:
 	GameManager(sqlite3* db) { _db = db; }
@@ -26,5 +29,19 @@ public:
 	void set_basket_user(int i_user_id) { _obj_basket.set_user_id(i_user_id); }
 	void add_basket_item(PurchaseItem& obj_purhcase_item);
 	void remove_basket_item(int i_game_id);
+
+	bool get_admin_flag() { return _bool_admin_flag; }
+	void set_admin_flag(bool bool_admin_flag) { _bool_admin_flag = bool_admin_flag; }
+
+	void set_initialised(bool bool_initialised) { _bool_initialised = bool_initialised; }
+
+	void update_game_name(int i_game_id, std::string str_game_name);
+	void update_game_genre(int i_game_id, int i_genre_id);
+	void update_game_price(int i_game_id, double d_price);
+	void update_game_rating(int i_game_id, int i_rating_id);
+	void update_game_copies(int i_game_id, int i_copies);
+
+	const std::vector<Rating> get_ratings();
+	const std::vector<Genre> get_genres();
 };
 

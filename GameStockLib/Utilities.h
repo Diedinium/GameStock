@@ -15,7 +15,7 @@ namespace util {
 	}
 
 	/// <summary>
-	/// Returns true/false on if compare is between min and max.
+	/// Returns bool on if compare is between min and max.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <param name="min"></param>
@@ -37,6 +37,42 @@ namespace util {
 	template <typename T>
 	bool is_less_than_or_equal_to(T number, T compare) {
 		return number <= compare;
+	}
+
+	/// <summary>
+	/// Returns bool on if number is more than or equal to compare
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	/// <param name="number"></param>
+	/// <param name="compare"></param>
+	/// <returns></returns>
+	template <typename T>
+	bool is_more_than_or_equal_to(T number, T compare) {
+		return number >= compare;
+	}
+
+	/// <summary>
+	/// Returns bool on if number is more than compare.
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	/// <param name="number"></param>
+	/// <param name="compare"></param>
+	/// <returns>bool</returns>
+	template <typename T>
+	bool is_more_than(T number, T compare) {
+		return number > compare;
+	}
+
+	/// <summary>
+	/// Returns bool on if number is less than compare
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	/// <param name="number"></param>
+	/// <param name="compare"></param>
+	/// <returns></returns>
+	template <typename T>
+	bool is_less_than(T number, T compare) {
+		return number < compare;
 	}
 
 	void output_games_header();

@@ -29,7 +29,7 @@ public:
 	void set_rating(Rating obj_rating) { _obj_rating = obj_rating; }
 
 	double get_price() { return _d_price; }
-	void set_price(double d_price) { _d_price = _d_price; }
+	void set_price(double d_price) { _d_price = d_price; }
 
 	int get_copies() { return _i_copies; }
 	void set_copies(int i_copies) { _i_copies = i_copies; }

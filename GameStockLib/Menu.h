@@ -19,18 +19,19 @@ public:
 
 class MenuContainer {
 private:
-    std::string _strText;
-    std::vector<std::unique_ptr<MenuItem>> _vecMenuItems;
-    bool _boolExitMenu;
-    int _iHighlightedIndex;
-    HANDLE _hOutputConsole;
-    HANDLE _hInputConsole;
+    std::string _str_text;
+    std::vector<std::unique_ptr<MenuItem>> _vec_menu_items;
+    bool _bool_exit_menu;
+    int _i_highlighted_index;
+    HANDLE _h_output_console;
+    HANDLE _h_input_console;
 public:
     MenuContainer(std::string const& text);
     void add_menu_item(std::unique_ptr<MenuItem> item);
     void execute();
-    bool get_exit_menu() { return _boolExitMenu; }
-    void set_exit_menu(bool exitMenu) { _boolExitMenu = exitMenu; }
+    bool get_exit_menu() { return _bool_exit_menu; }
+    void set_exit_menu(bool exitMenu) { _bool_exit_menu = exitMenu; }
+    void set_menu_text(std::string str_text) { _str_text = str_text; }
 };
 
 class GeneralMenuItem : public MenuItem {
@@ -93,6 +94,51 @@ protected:
     Game& _obj_game;
 public:
     ManageGameBaseMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : GeneralMenuItem(output, ptr_class_container), _obj_game(obj_game) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageGameBaseMenu, used to perform an update to a game name
+/// </summary>
+class UpdateGameNameMenu : public ManageGameBaseMenu {
+public:
+    UpdateGameNameMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageGameBaseMenu, used to perform an update to a game genre
+/// </summary>
+class UpdateGameGenreMenu : public ManageGameBaseMenu {
+public:
+    UpdateGameGenreMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageGameBaseMenu, used to perform an update to a game price
+/// </summary>
+class UpdateGamePriceMenu : public ManageGameBaseMenu {
+public:
+    UpdateGamePriceMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageGameBaseMenu, used to perform an update to a game rating
+/// </summary>
+class UpdateGameRatingMenu : public ManageGameBaseMenu {
+public:
+    UpdateGameRatingMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageGameBaseMenu, used to perform an update to game copies
+/// </summary>
+class UpdateGameCopiesMenu : public ManageGameBaseMenu {
+public:
+    UpdateGameCopiesMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
     void execute();
 };
 
