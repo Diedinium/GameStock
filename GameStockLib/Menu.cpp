@@ -53,10 +53,9 @@ void MenuContainer::add_menu_item(std::unique_ptr<MenuItem> item) {
 	_vec_menu_items.push_back(std::move(item));
 };
 
-GeneralMenuItem::GeneralMenuItem(std::string output, ClassContainer* ptr_class_container)
+GeneralMenuItem::GeneralMenuItem(std::string output, ClassContainer& ptr_class_container) : _ptr_class_container(ptr_class_container)
 {
 	_output = output;
-	_ptr_class_container = ptr_class_container;
 };
 
 void DummyMenu::execute() {
@@ -76,12 +75,15 @@ void LoginMenu::execute() {
 	std::cout << "Please enter your password: ";
 	obj_user.set_password(validate::validate_string());*/
 
-	obj_user.set_email("admin@gamestock.com");
-	obj_user.set_password("somesecureadminpassword");
+	/*obj_user.set_email("admin@gamestock.com");
+	obj_user.set_password("somesecureadminpassword");*/
+
+	obj_user.set_email("email@email.com");
+	obj_user.set_password("password");
 
 	try {
-		_ptr_class_container->ptr_user_manager.attempt_login(&obj_user);
-		bool bool_user_is_admin = _ptr_class_container->ptr_user_manager.get_current_user().get_is_admin();
+		_ptr_class_container.ptr_user_manager.attempt_login(&obj_user);
+		bool bool_user_is_admin = _ptr_class_container.ptr_user_manager.get_current_user().get_is_admin();
 
 		MenuContainer obj_menu_container = MenuContainer("Logged in as " + obj_user.get_email() + ".\nChoose one of the below options.\n(Esc to logout)\n");
 		if (bool_user_is_admin) {
@@ -103,8 +105,8 @@ void LoginMenu::execute() {
 			obj_menu_container.execute();
 		}
 
-		_ptr_class_container->ptr_user_manager.logout();
-		_ptr_class_container->ptr_game_manager.set_initialised(false);
+		_ptr_class_container.ptr_user_manager.logout();
+		_ptr_class_container.ptr_game_manager.set_initialised(false);
 	}
 	catch (std::exception& ex) {
 		std::cout << "Error: " << ex.what() << "\n";
@@ -140,7 +142,7 @@ void RegisterMenu::execute() {
 	}
 
 	try {
-		_ptr_class_container->ptr_user_manager.register_user(&obj_user);
+		_ptr_class_container.ptr_user_manager.register_user(&obj_user);
 
 		std::cout << "\nRegistration complete. User name is " << obj_user.get_email() << ".\nPlease now attempt to log in on the next screen.\n";
 
@@ -159,14 +161,13 @@ void ViewGamesMenu::execute() {
 	int i_highlighted_index = 0;
 	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
-	bool bool_user_is_admin = _ptr_class_container->ptr_user_manager.get_current_user().get_is_admin();
+	bool bool_user_is_admin = _ptr_class_container.ptr_user_manager.get_current_user().get_is_admin();
 
 	try {
-		_ptr_class_container->ptr_game_manager.set_admin_flag(bool_user_is_admin);
-		_ptr_class_container->ptr_game_manager.initialise_games();
-		std::vector<Game>& vec_games = _ptr_class_container->ptr_game_manager.get_vec_games();
+		_ptr_class_container.ptr_game_manager.set_admin_flag(bool_user_is_admin);
+		_ptr_class_container.ptr_game_manager.initialise_games();
+		std::vector<Game>& vec_games = _ptr_class_container.ptr_game_manager.get_vec_games();
 		// TODO: Implement paging, make compatible with admin version of this view.
-		// This also involves making admin initialise that returns all games, even if they have zero stock.
 
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
@@ -235,7 +236,7 @@ void ViewGamesMenu::execute() {
 
 					if (bool_user_is_admin) {
 						ManageGameBaseMenu("Manage game", _ptr_class_container, obj_game).execute();
-						_ptr_class_container->ptr_game_manager.initialise_games();
+						_ptr_class_container.ptr_game_manager.initialise_games();
 						break;
 					}
 					else {
@@ -252,7 +253,7 @@ void ViewGamesMenu::execute() {
 						i_copies = validate::validate_int(1, obj_game.get_copies());
 
 						PurchaseItem obj_purchase_item = PurchaseItem(obj_game.get_id(), obj_game, i_copies, obj_game.get_price());
-						_ptr_class_container->ptr_game_manager.add_basket_item(obj_purchase_item);
+						_ptr_class_container.ptr_game_manager.add_basket_item(obj_purchase_item);
 
 						std::cout << i_copies << " copies of '" << obj_game.get_name() << "' succesfully added to basket.\n";
 						util::pause();
@@ -277,12 +278,13 @@ void ViewGamesMenu::execute() {
 }
 
 void ViewBasketMenu::execute() {
-	std::vector<PurchaseItem>& vec_basket_items = _ptr_class_container->ptr_game_manager.get_basket().get_vec_purchase_items();
+	std::vector<PurchaseItem>& vec_basket_items = _ptr_class_container.ptr_game_manager.get_basket().get_vec_purchase_items();
 
 	KEY_EVENT_RECORD key{};
 	int i_highlighted_index = 0;
 	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	double d_basket_total = _ptr_class_container.ptr_game_manager.get_basket_total();
 
 	while (key.wVirtualKeyCode != VK_ESCAPE) {
 		system("cls");
@@ -308,6 +310,8 @@ void ViewBasketMenu::execute() {
 					util::output_basket_item(item);
 				}
 				});
+
+			std::cout << "\nTotal: " << d_basket_total << "\n";
 		}
 
 		while (!validate::get_control_char(key, h_input_console));
@@ -328,9 +332,20 @@ void ViewBasketMenu::execute() {
 				util::pause();
 				break;
 			}
-			std::cout << "Will do something here soon :)\n";
-			util::pause();
-			break;
+
+			try {
+				_ptr_class_container.ptr_game_manager.set_basket_user(_ptr_class_container.ptr_user_manager.get_user_id());
+				std::cout << "\nPurchase successfully placed totalling " << std::setprecision(2) << _ptr_class_container.ptr_game_manager.make_purchase() << "\n";
+				std::cout << "Please go to the main menu and 'View Purchase History' to see this invoice\n\n";
+				_ptr_class_container.ptr_game_manager.reset_basket();
+				util::pause();
+				return;
+			}
+			catch (std::exception& ex) {
+				std::cout << ex.what() << "\n";
+				util::pause();
+				break;
+			}
 		case VK_RETURN:
 			if (vec_basket_items.size() < 1) {
 				std::cout << "You cannot remove items from the basket when there are none to display.\n";
@@ -343,12 +358,13 @@ void ViewBasketMenu::execute() {
 				PurchaseItem obj_purchase_item = vec_basket_items[i_highlighted_index];
 				std::cout << "Removing '" << obj_purchase_item.get_game().get_name() << "' from basket...\n";
 
-				_ptr_class_container->ptr_game_manager.remove_basket_item(obj_purchase_item.get_game_id());
+				_ptr_class_container.ptr_game_manager.remove_basket_item(obj_purchase_item.get_game_id());
 				if (i_highlighted_index > (int)vec_basket_items.size() - 1) {
 					i_highlighted_index--;
 				}
 
 				std::cout << "'" << obj_purchase_item.get_game().get_name() << "' removed from basket.\n";
+				d_basket_total = _ptr_class_container.ptr_game_manager.get_basket_total();
 				util::pause();
 				break;
 			}
@@ -398,8 +414,8 @@ void UpdateGameNameMenu::execute() {
 	str_update_name = validate::validate_string(45, true);
 
 	try {
-		_ptr_class_container->ptr_game_manager.update_game_name(_obj_game.get_id(), str_update_name);
-		_ptr_class_container->ptr_game_manager.set_initialised(false);
+		_ptr_class_container.ptr_game_manager.update_game_name(_obj_game.get_id(), str_update_name);
+		_ptr_class_container.ptr_game_manager.set_initialised(false);
 		std::cout << "'" << _obj_game.get_name() << "' updated to '" << str_update_name << "' successfully.\n";
 		_obj_game.set_name(str_update_name);
 		util::pause();
@@ -419,7 +435,7 @@ void UpdateGameGenreMenu::execute() {
 	std::vector<Genre> vec_genres;
 
 	try {
-		vec_genres = _ptr_class_container->ptr_game_manager.get_genres();
+		vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what() << "\n";
@@ -456,8 +472,8 @@ void UpdateGameGenreMenu::execute() {
 			if ((int)vec_genres.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
 				try {
 					Genre obj_genre = vec_genres[i_highlighted_index];
-					_ptr_class_container->ptr_game_manager.update_game_genre(_obj_game.get_id(), obj_genre.get_id());
-					_ptr_class_container->ptr_game_manager.set_initialised(false);
+					_ptr_class_container.ptr_game_manager.update_game_genre(_obj_game.get_id(), obj_genre.get_id());
+					_ptr_class_container.ptr_game_manager.set_initialised(false);
 					std::cout << "\n'" << _obj_game.get_name() << "' genre successfully updated from " << _obj_game.get_genre().get_genre() << " to " << obj_genre.get_genre() << "\n";
 					_obj_game.set_genre(obj_genre);
 					util::pause();
@@ -489,8 +505,8 @@ void UpdateGamePriceMenu::execute() {
 	d_update_price = validate::validate_double(0.0);
 
 	try {
-		_ptr_class_container->ptr_game_manager.update_game_price(_obj_game.get_id(), d_update_price);
-		_ptr_class_container->ptr_game_manager.set_initialised(false);
+		_ptr_class_container.ptr_game_manager.update_game_price(_obj_game.get_id(), d_update_price);
+		_ptr_class_container.ptr_game_manager.set_initialised(false);
 		std::cout << "'" << _obj_game.get_name() << "' price updated to '" << std::setprecision(2) << d_update_price << "' successfully.\n";
 		_obj_game.set_price(d_update_price);
 		util::pause();
@@ -510,7 +526,7 @@ void UpdateGameRatingMenu::execute() {
 	std::vector<Rating> vec_ratings;
 
 	try {
-		vec_ratings = _ptr_class_container->ptr_game_manager.get_ratings();
+		vec_ratings = _ptr_class_container.ptr_game_manager.get_ratings();
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what() << "\n";
@@ -547,8 +563,8 @@ void UpdateGameRatingMenu::execute() {
 			if ((int)vec_ratings.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
 				try {
 					Rating obj_rating = vec_ratings[i_highlighted_index];
-					_ptr_class_container->ptr_game_manager.update_game_rating(_obj_game.get_id(), obj_rating.get_id());
-					_ptr_class_container->ptr_game_manager.set_initialised(false);
+					_ptr_class_container.ptr_game_manager.update_game_rating(_obj_game.get_id(), obj_rating.get_id());
+					_ptr_class_container.ptr_game_manager.set_initialised(false);
 					std::cout << "\n'" << _obj_game.get_name() << "' rating successfully updated from " << _obj_game.get_rating().get_rating() << " to " << obj_rating.get_rating() << "\n";
 					_obj_game.set_rating(obj_rating);
 					util::pause();
@@ -580,8 +596,8 @@ void UpdateGameCopiesMenu::execute() {
 	i_update_copies = validate::validate_int(0);
 
 	try {
-		_ptr_class_container->ptr_game_manager.update_game_copies(_obj_game.get_id(), i_update_copies);
-		_ptr_class_container->ptr_game_manager.set_initialised(false);
+		_ptr_class_container.ptr_game_manager.update_game_copies(_obj_game.get_id(), i_update_copies);
+		_ptr_class_container.ptr_game_manager.set_initialised(false);
 		std::cout << "'" << _obj_game.get_name() << "' available copies updated to '" << i_update_copies << "' successfully.\n";
 		_obj_game.set_copies(i_update_copies);
 		util::pause();

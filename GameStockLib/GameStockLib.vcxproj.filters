@@ -60,6 +60,9 @@
     <ClInclude Include="Purchase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PurchaseManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sqlite3.c">
@@ -99,6 +102,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Purchase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PurchaseManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

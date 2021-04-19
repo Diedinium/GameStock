@@ -2,6 +2,9 @@
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <numeric>
+#include <sstream>
+#include <iomanip>
 #include "sqlite3.h"
 #include "Game.h"
 #include "Rating.h"
@@ -29,6 +32,8 @@ public:
 	void set_basket_user(int i_user_id) { _obj_basket.set_user_id(i_user_id); }
 	void add_basket_item(PurchaseItem& obj_purhcase_item);
 	void remove_basket_item(int i_game_id);
+	double get_basket_total();
+	void reset_basket();
 
 	bool get_admin_flag() { return _bool_admin_flag; }
 	void set_admin_flag(bool bool_admin_flag) { _bool_admin_flag = bool_admin_flag; }
@@ -43,5 +48,7 @@ public:
 
 	const std::vector<Rating> get_ratings();
 	const std::vector<Genre> get_genres();
+
+	double make_purchase();
 };
 

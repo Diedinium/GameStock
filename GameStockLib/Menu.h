@@ -38,15 +38,15 @@ class GeneralMenuItem : public MenuItem {
 private:
     std::string _output;
 protected:
-    ClassContainer* _ptr_class_container;
+    ClassContainer& _ptr_class_container;
 public:
-    GeneralMenuItem(std::string output, ClassContainer* ptr_class_container);
+    GeneralMenuItem(std::string output, ClassContainer& ptr_class_container);
     std::string item_text() const { return _output; }
 };
 
 class DummyMenu : public GeneralMenuItem {
 public:
-    DummyMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    DummyMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
@@ -55,7 +55,7 @@ public:
 /// </summary>
 class LoginMenu : public GeneralMenuItem {
 public:
-    LoginMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    LoginMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
@@ -64,7 +64,7 @@ public:
 /// </summary>
 class RegisterMenu : public GeneralMenuItem {
 public:
-    RegisterMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    RegisterMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
@@ -73,7 +73,7 @@ public:
 /// </summary>
 class ViewGamesMenu : public GeneralMenuItem {
 public:
-    ViewGamesMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    ViewGamesMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
@@ -82,7 +82,7 @@ public:
 /// </summary>
 class ViewBasketMenu : public GeneralMenuItem {
 public:
-    ViewBasketMenu(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    ViewBasketMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
@@ -93,7 +93,7 @@ class ManageGameBaseMenu : public GeneralMenuItem {
 protected:
     Game& _obj_game;
 public:
-    ManageGameBaseMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : GeneralMenuItem(output, ptr_class_container), _obj_game(obj_game) {};
+    ManageGameBaseMenu(std::string output, ClassContainer& ptr_class_container, Game& obj_game) : GeneralMenuItem(output, ptr_class_container), _obj_game(obj_game) {};
     void execute();
 };
 
@@ -102,7 +102,7 @@ public:
 /// </summary>
 class UpdateGameNameMenu : public ManageGameBaseMenu {
 public:
-    UpdateGameNameMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    UpdateGameNameMenu(std::string output, ClassContainer& ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
     void execute();
 };
 
@@ -111,7 +111,7 @@ public:
 /// </summary>
 class UpdateGameGenreMenu : public ManageGameBaseMenu {
 public:
-    UpdateGameGenreMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    UpdateGameGenreMenu(std::string output, ClassContainer& ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
     void execute();
 };
 
@@ -120,7 +120,7 @@ public:
 /// </summary>
 class UpdateGamePriceMenu : public ManageGameBaseMenu {
 public:
-    UpdateGamePriceMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    UpdateGamePriceMenu(std::string output, ClassContainer& ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
     void execute();
 };
 
@@ -129,7 +129,7 @@ public:
 /// </summary>
 class UpdateGameRatingMenu : public ManageGameBaseMenu {
 public:
-    UpdateGameRatingMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    UpdateGameRatingMenu(std::string output, ClassContainer& ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
     void execute();
 };
 
@@ -138,13 +138,13 @@ public:
 /// </summary>
 class UpdateGameCopiesMenu : public ManageGameBaseMenu {
 public:
-    UpdateGameCopiesMenu(std::string output, ClassContainer* ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    UpdateGameCopiesMenu(std::string output, ClassContainer& ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
     void execute();
 };
 
 class SubMenuExample : public GeneralMenuItem {
 public:
-    SubMenuExample(std::string output, ClassContainer* ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    SubMenuExample(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 

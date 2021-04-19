@@ -82,6 +82,16 @@ void GameManager::remove_basket_item(int i_game_id) {
 	}
 }
 
+double GameManager::get_basket_total() {
+	return std::accumulate(_obj_basket.get_vec_purchase_items().begin(), _obj_basket.get_vec_purchase_items().end(), 0.0, [&](double total, PurchaseItem& item) {
+		return total + item.get_total();
+	});
+}
+
+void GameManager::reset_basket() {
+	_obj_basket.get_vec_purchase_items().clear();
+}
+
 void GameManager::update_game_name(int i_game_id, std::string str_game_name) {
 	sqlite3_stmt* stmt_update_name;
 
@@ -262,4 +272,50 @@ const std::vector<Genre> GameManager::get_genres() {
 
 	sqlite3_finalize(stmt_genres);
 	return vec_genres;
+}
+
+double GameManager::make_purchase() {
+	// TODO: Also update game counts within same purchase.
+
+	char* errorMessage;
+	double d_grand_total = get_basket_total();
+
+	std::stringstream ss;
+	ss.setf(std::ios::fixed);
+	ss << "INSERT INTO purchases(user_id, total) VALUES (" << _obj_basket.get_user_id() << ", " << std::setprecision(2) << d_grand_total << ")";
+	std::string temp = ss.str();
+
+	if (sqlite3_exec(_db, ss.str().c_str(), NULL, NULL, &errorMessage) != SQLITE_OK) {
+		throw new std::runtime_error(sqlite3_errmsg(_db));
+	}
+
+	int i_purchase_id = (int)sqlite3_last_insert_rowid(_db);
+
+	sqlite3_stmt* stmt_insert_purchase_item;
+	std::string str_insert_purchase_item = "INSERT INTO purchase_items(purchase_id, game_name, game_price, game_genre, game_rating, count) VALUES (?, ?, ?, ?, ?, ?)";
+
+	if (sqlite3_prepare_v2(_db, str_insert_purchase_item.c_str(), -1, &stmt_insert_purchase_item, NULL) != SQLITE_OK) {
+		std::string str_error_msg = "Failed to prepare insert statement: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	for (auto& item : _obj_basket.get_vec_purchase_items()) {
+		sqlite3_bind_int(stmt_insert_purchase_item, 1, i_purchase_id);
+		sqlite3_bind_text(stmt_insert_purchase_item, 2, item.get_game().get_name().c_str(), -1, SQLITE_TRANSIENT);
+		sqlite3_bind_double(stmt_insert_purchase_item, 3, item.get_price());
+		sqlite3_bind_text(stmt_insert_purchase_item, 4, item.get_game().get_genre().get_genre().c_str(), -1, SQLITE_TRANSIENT);
+		sqlite3_bind_text(stmt_insert_purchase_item, 5, item.get_game().get_rating().get_rating().c_str(), -1, SQLITE_TRANSIENT);
+		sqlite3_bind_int(stmt_insert_purchase_item, 6, item.get_count());
+
+		if (sqlite3_step(stmt_insert_purchase_item) != SQLITE_DONE) {
+			throw new std::runtime_error("Something went wrong while performing an insert, please try again.");
+		}
+
+		sqlite3_reset(stmt_insert_purchase_item);
+	}
+
+	sqlite3_finalize(stmt_insert_purchase_item);
+
+	return d_grand_total;
 }
