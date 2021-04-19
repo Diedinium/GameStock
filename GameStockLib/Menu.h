@@ -78,6 +78,24 @@ public:
 };
 
 /// <summary>
+/// When executed displays the current games to a user/administrator and allows various forms of interaction with the listed games.
+/// </summary>
+class AddGameMenu : public GeneralMenuItem {
+public:
+    AddGameMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+/// <summary>
+/// When executed displays the current games to a user/administrator and allows various forms of interaction with the listed games.
+/// </summary>
+class SelectGenreFilterMenu : public GeneralMenuItem {
+public:
+    SelectGenreFilterMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+/// <summary>
 /// Displays the users current basket along with options to perform on the basket.
 /// </summary>
 class ViewBasketMenu : public GeneralMenuItem {

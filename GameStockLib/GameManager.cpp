@@ -26,6 +26,13 @@ int GameManager::get_games() {
 		str_status_sql = "SELECT g.id, g.name, r.id as rating_id, r.rating, x.id as genre_id, x.genre, g.price, g.copies FROM games AS g LEFT JOIN ratings AS r on g.age_rating = r.id LEFT JOIN genres as x ON g.genre_id = x.id";
 	}
 
+	if (_obj_filter_genre.get_id() > 0 && _bool_admin_flag) {
+		str_status_sql = str_status_sql += " WHERE g.genre_id = " + std::to_string(_obj_filter_genre.get_id());
+	}
+	else if (_obj_filter_genre.get_id() > 0 && !_bool_admin_flag){
+		str_status_sql = str_status_sql += " AND g.genre_id = " + std::to_string(_obj_filter_genre.get_id());
+	}
+
 	sqlite3_prepare_v2(_db, str_status_sql.c_str(), -1, &stmt_games, NULL);
 	while ((i_return_code = sqlite3_step(stmt_games)) == SQLITE_ROW) {
 		Game obj_game = Game(
@@ -90,6 +97,29 @@ double GameManager::get_basket_total() {
 
 void GameManager::reset_basket() {
 	_obj_basket.get_vec_purchase_items().clear();
+}
+
+void GameManager::add_game(Game& obj_game) {
+	sqlite3_stmt* stmt_insert_game;
+	std::string str_insert_game = "INSERT INTO games(name, genre_id, age_rating, price, copies) VALUES (?, ?, ?, ?, ?)";
+
+	if (sqlite3_prepare_v2(_db, str_insert_game.c_str(), -1, &stmt_insert_game, NULL) != SQLITE_OK) {
+		std::string str_error_msg = "Failed to prepare insert statement: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	sqlite3_bind_text(stmt_insert_game, 1, obj_game.get_name().c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt_insert_game, 2, obj_game.get_genre().get_id());
+	sqlite3_bind_int(stmt_insert_game, 3, obj_game.get_rating().get_id());
+	sqlite3_bind_double(stmt_insert_game, 4, obj_game.get_price());
+	sqlite3_bind_int(stmt_insert_game, 5, obj_game.get_copies());
+
+	if (sqlite3_step(stmt_insert_game) != SQLITE_DONE) {
+		throw new std::runtime_error("Something went wrong while inserting this game, please try again.");
+	}
+
+	sqlite3_finalize(stmt_insert_game);
 }
 
 void GameManager::update_game_name(int i_game_id, std::string str_game_name) {
@@ -275,8 +305,6 @@ const std::vector<Genre> GameManager::get_genres() {
 }
 
 double GameManager::make_purchase() {
-	// TODO: Also update game counts within same purchase.
-
 	char* errorMessage;
 	double d_grand_total = get_basket_total();
 
@@ -317,5 +345,33 @@ double GameManager::make_purchase() {
 
 	sqlite3_finalize(stmt_insert_purchase_item);
 
+	sqlite3_stmt* stmt_update_game_copies;
+	std::string str_update_game_copies = "UPDATE games SET copies = ? WHERE id = ?";
+
+	if (sqlite3_prepare_v2(_db, str_update_game_copies.c_str(), -1, &stmt_update_game_copies, NULL) != SQLITE_OK) {
+		std::string str_error_msg = "Failed to prepare insert statement: ";
+		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
+		throw new std::runtime_error(str_error_msg);
+	}
+
+	for (auto& item : _obj_basket.get_vec_purchase_items()) {
+		sqlite3_bind_int(stmt_update_game_copies, 1, item.get_game().get_copies() - item.get_count());
+		sqlite3_bind_int(stmt_update_game_copies, 2, item.get_game().get_id());
+
+		if (sqlite3_step(stmt_update_game_copies) != SQLITE_DONE) {
+			throw new std::runtime_error("Something went wrong while performing an update, please try again.");
+		}
+
+		sqlite3_reset(stmt_update_game_copies);
+	}
+
+	sqlite3_finalize(stmt_update_game_copies);
+
 	return d_grand_total;
+}
+
+void GameManager::logout() {
+	set_initialised(false);
+	set_filter_genre(Genre());
+	reset_basket();
 }

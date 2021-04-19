@@ -41,7 +41,15 @@ namespace validate {
 	/// <param name="max_legnth"></param>
 	/// <param name="max_flag"></param>
 	/// <returns></returns>
-	std::string validate_string(int max_legnth, bool max_flag);
+	std::string validate_string(int max_length, bool max_flag);
+
+	/// <summary>
+	/// Gets user input as a string, but checks it is between the specified min and max values
+	/// </summary>
+	/// <param name="min_length"></param>
+	/// <param name="max_length"></param>
+	/// <returns></returns>
+	std::string validate_string(int min_length, int max_length);
 
 	/// <summary>
 	/// Validates that user input is an integer value.

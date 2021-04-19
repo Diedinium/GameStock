@@ -75,8 +75,8 @@ void LoginMenu::execute() {
 	std::cout << "Please enter your password: ";
 	obj_user.set_password(validate::validate_string());*/
 
-	/*obj_user.set_email("admin@gamestock.com");
-	obj_user.set_password("somesecureadminpassword");*/
+	//obj_user.set_email("admin@gamestock.com");
+	//obj_user.set_password("somesecureadminpassword");
 
 	obj_user.set_email("email@email.com");
 	obj_user.set_password("password");
@@ -88,7 +88,6 @@ void LoginMenu::execute() {
 		MenuContainer obj_menu_container = MenuContainer("Logged in as " + obj_user.get_email() + ".\nChoose one of the below options.\n(Esc to logout)\n");
 		if (bool_user_is_admin) {
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ViewGamesMenu("Manage games", _ptr_class_container)));
-			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Add new game", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage genres", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage users", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage account", _ptr_class_container)));
@@ -106,7 +105,7 @@ void LoginMenu::execute() {
 		}
 
 		_ptr_class_container.ptr_user_manager.logout();
-		_ptr_class_container.ptr_game_manager.set_initialised(false);
+		_ptr_class_container.ptr_game_manager.logout();
 	}
 	catch (std::exception& ex) {
 		std::cout << "Error: " << ex.what() << "\n";
@@ -156,18 +155,20 @@ void RegisterMenu::execute() {
 }
 
 void ViewGamesMenu::execute() {
-	ViewBasketMenu obj_basket_menu = ViewBasketMenu("View Basket", _ptr_class_container);
 	KEY_EVENT_RECORD key{};
 	int i_highlighted_index = 0;
 	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
 	bool bool_user_is_admin = _ptr_class_container.ptr_user_manager.get_current_user().get_is_admin();
+	int i_current_page = 0;
+	int i_page_size = 10;
+	int i_page_count = 0;
 
 	try {
 		_ptr_class_container.ptr_game_manager.set_admin_flag(bool_user_is_admin);
 		_ptr_class_container.ptr_game_manager.initialise_games();
 		std::vector<Game>& vec_games = _ptr_class_container.ptr_game_manager.get_vec_games();
-		// TODO: Implement paging, make compatible with admin version of this view.
+		std::vector<Game> vec_paged_games;
 
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
@@ -175,6 +176,7 @@ void ViewGamesMenu::execute() {
 				std::cout << "Manage/Update games\n";
 				std::cout << "Use [Arrow Keys] to navigate games/pages, press [Enter] to select game to manage\n";
 				std::cout << "Press [Esc] to go back\n";
+				std::cout << "Press [F1] to add game\n";
 				std::cout << "Press [F2] to filter by genre\n\n";
 			}
 			else {
@@ -189,9 +191,29 @@ void ViewGamesMenu::execute() {
 				std::cout << "There are currently no games to display.\n";
 			}
 			else {
+				if (_ptr_class_container.ptr_game_manager.get_filter_genre().get_id() > 0) {
+					std::cout << "Current genre filter: " << _ptr_class_container.ptr_game_manager.get_filter_genre().get_genre() << "\n\n";
+				}
+
 				util::output_games_header();
 
-				util::for_each_iterator(vec_games.begin(), vec_games.end(), 0, [&](int index, Game& item) {
+				i_page_count = ((int)vec_games.size() + i_page_size - 1) / i_page_size;
+
+				// As protection from index overflows, reset current page if it is more than the zero adjusted page count
+				// This is really a mess, but I can't think of many better ways of doing it.
+				if (i_current_page > (i_page_count - 1)) i_current_page = 0;
+
+				int i_final_item = 0;
+				if (((i_current_page * 10) + 10) > (int)vec_games.size() - 1) {
+					i_final_item = (int)vec_games.size();
+				}
+				else {
+					i_final_item = ((i_current_page * 10) + 10);
+				}
+
+				vec_paged_games = std::vector<Game>(vec_games.begin() + (i_current_page * 10), vec_games.begin() + i_final_item);
+
+				util::for_each_iterator(vec_paged_games.begin(), vec_paged_games.end(), 0, [&](int index, Game& item) {
 					if (i_highlighted_index == index) {
 						SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
 						util::output_game(item);
@@ -201,6 +223,8 @@ void ViewGamesMenu::execute() {
 						util::output_game(item);
 					}
 					});
+
+				std::cout << "\nPage " << i_current_page + 1 << " of " << i_page_count << "\n";
 			}
 			
 			while (!validate::get_control_char(key, h_input_console));
@@ -208,15 +232,39 @@ void ViewGamesMenu::execute() {
 			switch (key.wVirtualKeyCode)
 			{
 			case VK_DOWN:
-				if (i_highlighted_index < (int)vec_games.size() - 1) i_highlighted_index++;
+				if (i_highlighted_index < (int)vec_paged_games.size() - 1) i_highlighted_index++;
 				break;
 			case VK_UP:
 				if (i_highlighted_index > 0) i_highlighted_index--;
 				break;
+			case VK_LEFT:
+				if (i_current_page > 0) { 
+					i_current_page--; 
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_RIGHT:
+				if (i_current_page + 1 < i_page_count) {
+					i_current_page++;
+					i_highlighted_index = 0;
+				}
+				break;
 			case VK_ESCAPE:
+				_ptr_class_container.ptr_game_manager.set_filter_genre(Genre());
+				_ptr_class_container.ptr_game_manager.set_initialised(false);
 				return;
 			case VK_F1:
-				if (!bool_user_is_admin) obj_basket_menu.execute();
+				if (!bool_user_is_admin) { 
+					ViewBasketMenu("View Basket", _ptr_class_container).execute(); 
+					i_highlighted_index = 0;
+				}
+				else { 
+					AddGameMenu("Add game", _ptr_class_container).execute();
+				}
+				break;
+			case VK_F2:
+				SelectGenreFilterMenu("Genre Filter", _ptr_class_container).execute();
+				i_highlighted_index = 0;
 				break;
 			case VK_RETURN:
 				if (vec_games.size() < 1) {
@@ -230,9 +278,9 @@ void ViewGamesMenu::execute() {
 					break;
 				}
 
-				if ((int)vec_games.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+				if ((int)vec_paged_games.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
 					system("cls");
-					Game& obj_game = vec_games[i_highlighted_index];
+					Game& obj_game = vec_paged_games[i_highlighted_index];
 
 					if (bool_user_is_admin) {
 						ManageGameBaseMenu("Manage game", _ptr_class_container, obj_game).execute();
@@ -265,7 +313,6 @@ void ViewGamesMenu::execute() {
 					util::pause();
 					break;
 				}
-
 			default:
 				break;
 			}
@@ -274,6 +321,218 @@ void ViewGamesMenu::execute() {
 	catch (std::exception& ex) {
 		std::cout << "Error: " << ex.what() << "\n";
 		util::pause();
+	}
+}
+
+void AddGameMenu::execute() {
+	Game obj_game;
+	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+
+	system("cls");
+	std::cout << "Please follow the prompts to add a new game.\n";
+	std::cout << "Please enter the game name\n";
+	std::cout << "Game Name: ";
+	obj_game.set_name(validate::validate_string(1, 45));
+
+	try {
+		KEY_EVENT_RECORD key{};
+		int i_highlighted_index = 0;
+		std::vector<Genre> vec_genres;
+
+		vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
+
+		while (key.wVirtualKeyCode != VK_RETURN) {
+			system("cls");
+			std::cout << "Please select the game genre for '" << obj_game.get_name() << "'\nNavigate with [Arrow Keys]\nPress [Enter] to select choice\n\n";
+
+			util::for_each_iterator(vec_genres.begin(), vec_genres.end(), 0, [&](int index, Genre& item) {
+				if (i_highlighted_index == index) {
+					SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
+					std::cout << "\t" << item.get_genre() << "\n";
+					SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+				}
+				else {
+					std::cout << "\t" << item.get_genre() << "\n";
+				}
+				});
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_DOWN:
+				if (i_highlighted_index < (int)vec_genres.size() - 1) i_highlighted_index++;
+				break;
+			case VK_UP:
+				if (i_highlighted_index > 0) i_highlighted_index--;
+				break;
+			case VK_RETURN:
+				if ((int)vec_genres.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					obj_game.set_genre(vec_genres[i_highlighted_index]);
+					break;
+				}
+				else {
+					std::cout << "Not a valid option, please try again.\n";
+					util::pause();
+					break;
+				}
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << ex.what() << "\n";
+		util::pause();
+		return;
+	}
+
+	try {
+		KEY_EVENT_RECORD key{};
+		int i_highlighted_index = 0;
+		std::vector<Rating> vec_ratings;
+
+		vec_ratings = _ptr_class_container.ptr_game_manager.get_ratings();
+
+		while (key.wVirtualKeyCode != VK_RETURN) {
+			system("cls");
+			std::cout << "Please select the age rating for '" << obj_game.get_name() << "'\nNavigate with [Arrow Keys]\nPress [Enter] to select choice\n\n";
+
+			util::for_each_iterator(vec_ratings.begin(), vec_ratings.end(), 0, [&](int index, Rating& item) {
+				if (i_highlighted_index == index) {
+					SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
+					std::cout << "\t" << item.get_rating() << "\n";
+					SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+				}
+				else {
+					std::cout << "\t" << item.get_rating() << "\n";
+				}
+				});
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_DOWN:
+				if (i_highlighted_index < (int)vec_ratings.size() - 1) i_highlighted_index++;
+				break;
+			case VK_UP:
+				if (i_highlighted_index > 0) i_highlighted_index--;
+				break;
+			case VK_RETURN:
+				if ((int)vec_ratings.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					obj_game.set_rating(vec_ratings[i_highlighted_index]);
+					break;
+				}
+				else {
+					std::cout << "Not a valid option, please try again.\n";
+					util::pause();
+					break;
+				}
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << ex.what() << "\n";
+		util::pause();
+		return;
+	}
+
+	system("cls");
+	std::cout << "Please enter the price for '" << obj_game.get_name() << "'\n";
+	std::cout << "Game Price: ";
+	obj_game.set_price(validate::validate_double(0.0));
+	std::cout << "\n";
+
+	std::cout << "Please enter the number of available copies for '" << obj_game.get_name() << "'\n";
+	std::cout << "Available Copies: ";
+	obj_game.set_copies(validate::validate_int(0));
+
+	try {
+		_ptr_class_container.ptr_game_manager.add_game(obj_game);
+		_ptr_class_container.ptr_game_manager.set_filter_genre(Genre());
+		_ptr_class_container.ptr_game_manager.set_initialised(false);
+		_ptr_class_container.ptr_game_manager.initialise_games();
+		std::cout << "\n'" << obj_game.get_name() << "' successfully added\nGo to the manage game screen if you wish to manage this game.\n";
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		std::cout << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void SelectGenreFilterMenu::execute() {
+	KEY_EVENT_RECORD key{};
+	int i_highlighted_index = 0;
+	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	std::vector<Genre> vec_genres;
+
+	try {
+		vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
+	}
+	catch (std::exception& ex) {
+		std::cout << ex.what() << "\n";
+		util::pause();
+		return;
+	}
+
+	while (key.wVirtualKeyCode != VK_RETURN) {
+		system("cls");
+		std::cout << "Select genre to filter by\nNavigate with [Arrow Keys]\nPress [F1] to clear current filter\nPress [Enter] to select choice\nPress [Esc] to cancel.\n\n";
+
+		if (_ptr_class_container.ptr_game_manager.get_filter_genre().get_id() > 0) {
+			std::cout << "Current genre filter: " << _ptr_class_container.ptr_game_manager.get_filter_genre().get_genre() << "\n\n";
+		}
+
+		util::for_each_iterator(vec_genres.begin(), vec_genres.end(), 0, [&](int index, Genre& item) {
+			if (i_highlighted_index == index) {
+				SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
+				std::cout << "\t" << item.get_genre() << "\n";
+				SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+			}
+			else {
+				std::cout << "\t" << item.get_genre() << "\n";
+			}
+			});
+
+		while (!validate::get_control_char(key, h_input_console));
+
+		switch (key.wVirtualKeyCode)
+		{
+		case VK_DOWN:
+			if (i_highlighted_index < (int)vec_genres.size() - 1) i_highlighted_index++;
+			break;
+		case VK_UP:
+			if (i_highlighted_index > 0) i_highlighted_index--;
+			break;
+		case VK_F1:
+			_ptr_class_container.ptr_game_manager.set_filter_genre(Genre());
+			_ptr_class_container.ptr_game_manager.set_initialised(false);
+			_ptr_class_container.ptr_game_manager.initialise_games();
+			break;
+		case VK_RETURN:
+			if ((int)vec_genres.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+				Genre obj_genre = vec_genres[i_highlighted_index];
+				_ptr_class_container.ptr_game_manager.set_filter_genre(obj_genre);
+				_ptr_class_container.ptr_game_manager.set_initialised(false);
+				_ptr_class_container.ptr_game_manager.initialise_games();
+				return;
+			}
+			else {
+				std::cout << "Not a valid option, please try again.\n";
+				util::pause();
+				break;
+			}
+		case VK_ESCAPE:
+			return;
+		default:
+			break;
+		}
 	}
 }
 
@@ -337,6 +596,8 @@ void ViewBasketMenu::execute() {
 				_ptr_class_container.ptr_game_manager.set_basket_user(_ptr_class_container.ptr_user_manager.get_user_id());
 				std::cout << "\nPurchase successfully placed totalling " << std::setprecision(2) << _ptr_class_container.ptr_game_manager.make_purchase() << "\n";
 				std::cout << "Please go to the main menu and 'View Purchase History' to see this invoice\n\n";
+				_ptr_class_container.ptr_game_manager.set_initialised(false);
+				_ptr_class_container.ptr_game_manager.initialise_games();
 				_ptr_class_container.ptr_game_manager.reset_basket();
 				util::pause();
 				return;
@@ -490,6 +751,8 @@ void UpdateGameGenreMenu::execute() {
 				util::pause();
 				break;
 			}
+		case VK_ESCAPE:
+			return;
 		default:
 			break;
 		}
@@ -581,6 +844,8 @@ void UpdateGameRatingMenu::execute() {
 				util::pause();
 				break;
 			}
+		case VK_ESCAPE:
+			return;
 		default:
 			break;
 		}

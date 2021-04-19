@@ -51,7 +51,7 @@ std::string validate::validate_string(int min_length) {
 	std::string strInput;
 
 	while (true) {
-		std::string strMessage = "Not a valid number";
+		std::string strMessage = "";
 		std::getline(std::cin, strInput);
 
 		if (util::is_less_than_or_equal_to(strInput.length(), (size_t)min_length)) {
@@ -68,11 +68,32 @@ std::string validate::validate_string(int max_length, bool max_flag) {
 	std::string strInput;
 
 	while (true) {
-		std::string strMessage = "Not a valid number";
+		std::string strMessage = "";
 		std::getline(std::cin, strInput);
 
 		if (util::is_more_than_or_equal_to(strInput.length(), (size_t)max_length)) {
 			strMessage = "To long, max length is " + std::to_string(max_length);
+			std::cout << strMessage << ", try again: ";
+		}
+		else {
+			return strInput;
+		}
+	}
+}
+
+std::string validate::validate_string(int min_length, int max_length) {
+	std::string strInput;
+
+	while (true) {
+		std::string strMessage = "";
+		std::getline(std::cin, strInput);
+
+		if (util::is_more_than(strInput.length(), (size_t)max_length)) {
+			strMessage = "To long, max length is " + std::to_string(max_length);
+			std::cout << strMessage << ", try again: ";
+		}
+		else if (util::is_less_than(strInput.length(), (size_t)min_length)) {
+			strMessage = "To short, min length is " + std::to_string(min_length);
 			std::cout << strMessage << ", try again: ";
 		}
 		else {

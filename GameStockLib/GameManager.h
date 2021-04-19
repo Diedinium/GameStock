@@ -17,6 +17,7 @@ class GameManager
 	sqlite3* _db;
 	std::vector<Game> _vec_games;
 	Purchase _obj_basket;
+	Genre _obj_filter_genre;
 	bool _bool_initialised = false;
 	bool _bool_admin_flag = false;
 	int get_games();
@@ -40,6 +41,7 @@ public:
 
 	void set_initialised(bool bool_initialised) { _bool_initialised = bool_initialised; }
 
+	void add_game(Game& obj_game);
 	void update_game_name(int i_game_id, std::string str_game_name);
 	void update_game_genre(int i_game_id, int i_genre_id);
 	void update_game_price(int i_game_id, double d_price);
@@ -50,5 +52,10 @@ public:
 	const std::vector<Genre> get_genres();
 
 	double make_purchase();
+
+	Genre& get_filter_genre() { return _obj_filter_genre; }
+	void set_filter_genre(Genre obj_filter_genre) { _obj_filter_genre = obj_filter_genre; }
+
+	void logout();
 };
 
