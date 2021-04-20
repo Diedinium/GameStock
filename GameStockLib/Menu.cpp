@@ -75,11 +75,11 @@ void LoginMenu::execute() {
 	std::cout << "Please enter your password: ";
 	obj_user.set_password(validate::validate_string());*/
 
-	//obj_user.set_email("admin@gamestock.com");
-	//obj_user.set_password("somesecureadminpassword");
+	obj_user.set_email("admin@gamestock.com");
+	obj_user.set_password("somesecureadminpassword");
 
-	obj_user.set_email("email@email.com");
-	obj_user.set_password("password");
+	//obj_user.set_email("email@email.com");
+	//obj_user.set_password("password");
 
 	try {
 		_ptr_class_container.ptr_user_manager.attempt_login(&obj_user);
@@ -88,7 +88,7 @@ void LoginMenu::execute() {
 		MenuContainer obj_menu_container = MenuContainer("Logged in as " + obj_user.get_email() + ".\nChoose one of the below options.\n(Esc to logout)\n");
 		if (bool_user_is_admin) {
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ViewGamesMenu("Manage games", _ptr_class_container)));
-			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage genres", _ptr_class_container)));
+			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ManageGenresMenu("Manage genres", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage users", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage account", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Purchase history and reports", _ptr_class_container)));
@@ -199,7 +199,7 @@ void ViewGamesMenu::execute() {
 
 				i_page_count = ((int)vec_games.size() + i_page_size - 1) / i_page_size;
 
-				// As protection from index overflows, reset current page if it is more than the zero adjusted page count
+				// As protection from index overflows, reset current page if it is more than the zero-index adjusted page count
 				// This is really a mess, but I can't think of many better ways of doing it.
 				if (i_current_page > (i_page_count - 1)) i_current_page = 0;
 
@@ -226,7 +226,7 @@ void ViewGamesMenu::execute() {
 
 				std::cout << "\nPage " << i_current_page + 1 << " of " << i_page_count << "\n";
 			}
-			
+
 			while (!validate::get_control_char(key, h_input_console));
 
 			switch (key.wVirtualKeyCode)
@@ -238,8 +238,8 @@ void ViewGamesMenu::execute() {
 				if (i_highlighted_index > 0) i_highlighted_index--;
 				break;
 			case VK_LEFT:
-				if (i_current_page > 0) { 
-					i_current_page--; 
+				if (i_current_page > 0) {
+					i_current_page--;
 					i_highlighted_index = 0;
 				}
 				break;
@@ -254,11 +254,11 @@ void ViewGamesMenu::execute() {
 				_ptr_class_container.ptr_game_manager.set_initialised(false);
 				return;
 			case VK_F1:
-				if (!bool_user_is_admin) { 
-					ViewBasketMenu("View Basket", _ptr_class_container).execute(); 
+				if (!bool_user_is_admin) {
+					ViewBasketMenu("View Basket", _ptr_class_container).execute();
 					i_highlighted_index = 0;
 				}
-				else { 
+				else {
 					AddGameMenu("Add game", _ptr_class_container).execute();
 				}
 				break;
@@ -285,6 +285,7 @@ void ViewGamesMenu::execute() {
 					if (bool_user_is_admin) {
 						ManageGameBaseMenu("Manage game", _ptr_class_container, obj_game).execute();
 						_ptr_class_container.ptr_game_manager.initialise_games();
+						i_highlighted_index = 0;
 						break;
 					}
 					else {
@@ -295,17 +296,24 @@ void ViewGamesMenu::execute() {
 						}
 
 						int i_copies = 0;
-						std::cout << "Please enter the number of copies of '" << obj_game.get_name() << "' that you would like to buy\n";
+						std::cout << "Please enter the number of copies of '" << obj_game.get_name() << "' that you would like to add to your basket\n";
 						std::cout << "(Minimum 1, Maximum " << obj_game.get_copies() << ")\n";
 						std::cout << "Copies: ";
 						i_copies = validate::validate_int(1, obj_game.get_copies());
 
-						PurchaseItem obj_purchase_item = PurchaseItem(obj_game.get_id(), obj_game, i_copies, obj_game.get_price());
-						_ptr_class_container.ptr_game_manager.add_basket_item(obj_purchase_item);
+						try {
+							PurchaseItem obj_purchase_item = PurchaseItem(obj_game.get_id(), obj_game, i_copies, obj_game.get_price());
+							_ptr_class_container.ptr_game_manager.add_basket_item(obj_purchase_item);
 
-						std::cout << i_copies << " copies of '" << obj_game.get_name() << "' succesfully added to basket.\n";
-						util::pause();
-						break;
+							std::cout << i_copies << " copies of '" << obj_game.get_name() << "' succesfully added to basket.\n";
+							util::pause();
+							break;
+						}
+						catch (std::exception& ex) {
+							std::cout << "Error: " << ex.what() << "\n";
+							util::pause();
+							break;
+						}
 					}
 				}
 				else {
@@ -658,11 +666,49 @@ void ManageGameBaseMenu::execute() {
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateGamePriceMenu("Change price", _ptr_class_container, _obj_game)));
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateGameRatingMenu("Change age rating", _ptr_class_container, _obj_game)));
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateGameCopiesMenu("Update number of copies available", _ptr_class_container, _obj_game)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DeleteGameMenu("Delete game", _ptr_class_container, _obj_game, obj_menu_container)));
 
 	while (!obj_menu_container.get_exit_menu()) {
 		obj_menu_container.set_menu_text("Selected game: " + _obj_game.get_name() + "\nChoose one of the below actions to perform on this game.\nPress [ESC] to cancel\n");
 		system("cls");
 		obj_menu_container.execute();
+	}
+}
+
+void DeleteGameMenu::execute() {
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	KEY_EVENT_RECORD key{};
+
+	system("cls");
+	std::cout << "Are you sure you want to delete '" << _obj_game.get_name() << "'?\n";
+	std::cout << "NOTE: Deleting a game will not remove any purchase history that contains this game\n\n";
+	std::cout << "Press [Enter] to confirm, or [Esc] to cancel\n";
+
+	while (key.wVirtualKeyCode != VK_RETURN) {
+		while (!validate::get_control_char(key, h_input_console));
+
+		switch (key.wVirtualKeyCode)
+		{
+		case VK_RETURN:
+			try {
+				_ptr_class_container.ptr_game_manager.delete_game(_obj_game);
+				_ptr_class_container.ptr_game_manager.set_initialised(false);
+				_obj_menu_container.set_exit_menu(true);
+				std::cout << "\n'" << _obj_game.get_name() << "' successfully deleted.\n";
+				util::pause();
+				break;
+			}
+			catch (std::exception& ex) {
+				std::cout << ex.what() << "\n";
+				util::pause();
+				return;
+			}
+			break;
+		case VK_ESCAPE:
+			return;
+		default:
+			break;
+		}
 	}
 }
 
@@ -869,6 +915,210 @@ void UpdateGameCopiesMenu::execute() {
 	}
 	catch (std::exception& ex) {
 		std::cout << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void ManageGenresMenu::execute() {
+	KEY_EVENT_RECORD key{};
+	int i_highlighted_index = 0;
+	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	int i_current_page = 0;
+	int i_page_size = 10;
+	int i_page_count = 0;
+
+	try {
+		std::vector<Genre> vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
+		std::vector<Genre> vec_paged_genres;
+
+		while (key.wVirtualKeyCode != VK_ESCAPE) {
+			system("cls");
+			std::cout << "Manage/Update genres\n";
+			std::cout << "Use [Arrow Keys] to navigate genres/pages, press [Enter] to select genre to manage\n";
+			std::cout << "Press [Esc] to go back\n";
+			std::cout << "Press [F1] to add new genre\n\n";
+
+			std::cout << "WARNING: In order to preserve data integrity, deleting a genre will also remove ALL games that use this genre.\n\n";
+
+			if (vec_genres.size() < 1) {
+				std::cout << "There are currently no genres to display.\n";
+			}
+			else {
+				i_page_count = ((int)vec_genres.size() + i_page_size - 1) / i_page_size;
+
+				// As protection from index overflows, reset current page if it is more than the zero-index adjusted page count
+				// This is really a mess, but I can't think of many better ways of doing it.
+				if (i_current_page > (i_page_count - 1)) i_current_page = 0;
+
+				int i_final_item = 0;
+				if (((i_current_page * 10) + 10) > (int)vec_genres.size() - 1) {
+					i_final_item = (int)vec_genres.size();
+				}
+				else {
+					i_final_item = ((i_current_page * 10) + 10);
+				}
+
+				vec_paged_genres = std::vector<Genre>(vec_genres.begin() + (i_current_page * 10), vec_genres.begin() + i_final_item);
+
+				util::for_each_iterator(vec_paged_genres.begin(), vec_paged_genres.end(), 0, [&](int index, Genre& item) {
+					if (i_highlighted_index == index) {
+						SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
+						std::cout << "\t" << item.get_genre() << "\n";
+						SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+					}
+					else {
+						std::cout << "\t" << item.get_genre() << "\n";
+					}
+					});
+
+				std::cout << "\nPage " << i_current_page + 1 << " of " << i_page_count << "\n";
+			}
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_DOWN:
+				if (i_highlighted_index < (int)vec_paged_genres.size() - 1) i_highlighted_index++;
+				break;
+			case VK_UP:
+				if (i_highlighted_index > 0) i_highlighted_index--;
+				break;
+			case VK_LEFT:
+				if (i_current_page > 0) {
+					i_current_page--;
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_RIGHT:
+				if (i_current_page + 1 < i_page_count) {
+					i_current_page++;
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_ESCAPE:
+				return;
+			case VK_F1:
+				AddGenreMenu("Add genre", _ptr_class_container).execute();
+				vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
+				break;
+			case VK_RETURN:
+				if (vec_genres.size() < 1) {
+					std::cout << "You cannot manage genres when there are none to display.\n";
+					util::pause();
+					break;
+				}
+
+				if ((int)vec_paged_genres.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					system("cls");
+					Genre& obj_genre = vec_paged_genres[i_highlighted_index];
+
+					ManageGenreBaseMenu("Manage genre", _ptr_class_container, obj_genre).execute();
+					vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
+					i_highlighted_index = 0;
+					break;
+				}
+				else {
+					std::cout << "Not a valid option, please try again.\n";
+					util::pause();
+					break;
+				}
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void ManageGenreBaseMenu::execute() {
+	MenuContainer obj_menu_container = MenuContainer("");
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateGenreNameMenu("Change name", _ptr_class_container, _obj_genre)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DeleteGenreMenu("Delete genre", _ptr_class_container, _obj_genre, obj_menu_container)));
+
+	while (!obj_menu_container.get_exit_menu()) {
+		obj_menu_container.set_menu_text("Selected genre: " + _obj_genre.get_genre() + "\nChoose one of the below actions to perform on this game.\nPress [ESC] to cancel\n");
+		system("cls");
+		obj_menu_container.execute();
+	}
+}
+
+void AddGenreMenu::execute() {
+	Genre obj_genre;
+
+	system("cls");
+	std::cout << "Please follow the prompts to add a new genre.\n";
+	std::cout << "Please enter the genre name\n";
+	std::cout << "Genre Name: ";
+	obj_genre.set_genre(validate::validate_string(1, 20));
+
+	try {
+		_ptr_class_container.ptr_game_manager.add_genre(obj_genre);
+		std::cout << "\n'" << obj_genre.get_genre() << "' successfully added.\n";
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		std::cout << "\nError: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void DeleteGenreMenu::execute() {
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	KEY_EVENT_RECORD key{};
+
+	system("cls");
+	std::cout << "Are you sure you want to delete '" << _obj_genre.get_genre() << "'?\n";
+	std::cout << "WARNING: Deleting this genre will remove ALL games that use this genre in order to preserve data integrity.\nHowever, This does not impact purchase history\n\n";
+	std::cout << "Press [Enter] to confirm, or [Esc] to cancel\n";
+
+	while (key.wVirtualKeyCode != VK_RETURN) {
+		while (!validate::get_control_char(key, h_input_console));
+
+		switch (key.wVirtualKeyCode)
+		{
+		case VK_RETURN:
+			try {
+				_ptr_class_container.ptr_game_manager.delete_genre(_obj_genre);
+				_obj_menu_container.set_exit_menu(true);
+				std::cout << "\n'" << _obj_genre.get_genre() << "' successfully deleted.\n";
+				util::pause();
+				break;
+			}
+			catch (std::exception& ex) {
+				std::cout << "\nError: " << ex.what() << "\n";
+				util::pause();
+				return;
+			}
+			break;
+		case VK_ESCAPE:
+			return;
+		default:
+			break;
+		}
+	}
+}
+
+void UpdateGenreNameMenu::execute() {
+	std::string str_update_genre_name = "";
+
+	system("cls");
+	std::cout << "Updating genre '" << _obj_genre.get_genre() << "'\n\n";
+	std::cout << "Please enter new genre name : ";
+	str_update_genre_name = validate::validate_string(1, 20);
+
+	try {
+		_ptr_class_container.ptr_game_manager.update_genre_name(_obj_genre.get_id(), str_update_genre_name);
+		std::cout << "'" << _obj_genre.get_genre() << "' updated to '" << str_update_genre_name << "' successfully.\n";
+		_obj_genre.set_genre(str_update_genre_name);
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		std::cout << "\nError: " << ex.what() << "\n";
 		util::pause();
 	}
 }

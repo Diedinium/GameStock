@@ -116,6 +116,17 @@ public:
 };
 
 /// <summary>
+/// When executed allows admin to delete the currently selected game.
+/// </summary>
+class DeleteGameMenu : public ManageGameBaseMenu {
+private:
+    MenuContainer& _obj_menu_container;
+public:
+    DeleteGameMenu(std::string output, ClassContainer& ptr_class_container, Game& obj_game, MenuContainer& obj_menu_container) : ManageGameBaseMenu(output, ptr_class_container, obj_game), _obj_menu_container(obj_menu_container) {};
+    void execute();
+};
+
+/// <summary>
 /// Implements ManageGameBaseMenu, used to perform an update to a game name
 /// </summary>
 class UpdateGameNameMenu : public ManageGameBaseMenu {
@@ -157,6 +168,49 @@ public:
 class UpdateGameCopiesMenu : public ManageGameBaseMenu {
 public:
     UpdateGameCopiesMenu(std::string output, ClassContainer& ptr_class_container, Game& obj_game) : ManageGameBaseMenu(output, ptr_class_container, obj_game) {};
+    void execute();
+};
+
+class ManageGenresMenu : public GeneralMenuItem {
+public:
+    ManageGenresMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+class AddGenreMenu : public GeneralMenuItem {
+public:
+    AddGenreMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+/// <summary>
+/// Base menu of other menus related to genre management, and displays these other menu options upon execution.
+/// </summary>
+class ManageGenreBaseMenu : public GeneralMenuItem {
+protected:
+    Genre& _obj_genre;
+public:
+    ManageGenreBaseMenu(std::string output, ClassContainer& ptr_class_container, Genre& obj_genre) : GeneralMenuItem(output, ptr_class_container), _obj_genre(obj_genre) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageGameBaseMenu, used to perform an update to a game name
+/// </summary>
+class UpdateGenreNameMenu : public ManageGenreBaseMenu {
+public:
+    UpdateGenreNameMenu(std::string output, ClassContainer& ptr_class_container, Genre& obj_genre) : ManageGenreBaseMenu(output, ptr_class_container, obj_genre) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageGameBaseMenu, used to perform an update to a game name
+/// </summary>
+class DeleteGenreMenu : public ManageGenreBaseMenu {
+private:
+    MenuContainer& _obj_menu_container;
+public:
+    DeleteGenreMenu(std::string output, ClassContainer& ptr_class_container, Genre& obj_genre, MenuContainer& obj_menu_container) : ManageGenreBaseMenu(output, ptr_class_container, obj_genre), _obj_menu_container(obj_menu_container) {};
     void execute();
 };
 

@@ -42,11 +42,17 @@ public:
 	void set_initialised(bool bool_initialised) { _bool_initialised = bool_initialised; }
 
 	void add_game(Game& obj_game);
+	void delete_game(Game& obj_game);
+
 	void update_game_name(int i_game_id, std::string str_game_name);
 	void update_game_genre(int i_game_id, int i_genre_id);
 	void update_game_price(int i_game_id, double d_price);
 	void update_game_rating(int i_game_id, int i_rating_id);
 	void update_game_copies(int i_game_id, int i_copies);
+
+	void add_genre(Genre& obj_genre);
+	void delete_genre(Genre& obj_genre);
+	void update_genre_name(int i_genre_id, std::string str_genre_name);
 
 	const std::vector<Rating> get_ratings();
 	const std::vector<Genre> get_genres();
