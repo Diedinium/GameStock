@@ -38,3 +38,19 @@ void util::output_basket_item(PurchaseItem& obj_purchase_item) {
 		<< std::setw(9) << std::left << obj_purchase_item.get_total()
 		<< std::setw(14) << std::left << obj_purchase_item.get_total_before_vat() << "\n";
 }
+
+void util::output_users_header() {
+	std::cout << "--------------------------------------------------------------------------------------------\n";
+	std::cout << std::setw(30) << std::left << "Name" << std::setw(6) << std::left << "Age" << std::setw(45) << std::left << "Email" << std::setw(11) << std::left << "Is Admin?" << "\n";
+	std::cout << "--------------------------------------------------------------------------------------------\n";
+}
+
+void util::output_user(User& obj_user) {
+	std::cout.precision(2);
+	std::cout
+		<< std::fixed
+		<< std::setw(30) << std::left << obj_user.get_full_name()
+		<< std::setw(6) << std::left << obj_user.get_age()
+		<< std::setw(45) << std::left << obj_user.get_email()
+		<< std::setw(11) << std::left << (obj_user.get_is_admin() ? "True" : "False") << "\n";
+}

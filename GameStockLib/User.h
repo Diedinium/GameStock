@@ -11,7 +11,8 @@ class User
 	bool _bool_is_admin;
 public:
 	User();
-	User(std::string, int, std::string, std::string, bool);
+	User(std::string str_full_name, int i_age, std::string str_email, std::string str_password, bool bool_is_admin);
+	User(int i_id, std::string str_full_name, int i_age, std::string str_email, std::string str_password, bool bool_is_admin);
 
 	int get_id() { return _i_id; }
 	void set_id(int i_id) { _i_id = i_id; }

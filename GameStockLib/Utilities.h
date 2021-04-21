@@ -5,6 +5,7 @@
 #include <vector>
 #include "Game.h"
 #include "PurchaseItem.h"
+#include "User.h"
 
 namespace util {
 	template <typename IteratorT, typename FunctionT>
@@ -80,6 +81,9 @@ namespace util {
 
 	void output_basket_header();
 	void output_basket_item(PurchaseItem& obj_purchase_item);
+
+	void output_users_header();
+	void output_user(User& obj_user);
 
 	void pause();
 }

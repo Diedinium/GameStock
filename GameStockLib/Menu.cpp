@@ -82,20 +82,20 @@ void LoginMenu::execute() {
 	//obj_user.set_password("password");
 
 	try {
-		_ptr_class_container.ptr_user_manager.attempt_login(&obj_user);
+		_ptr_class_container.ptr_user_manager.attempt_login(obj_user);
 		bool bool_user_is_admin = _ptr_class_container.ptr_user_manager.get_current_user().get_is_admin();
 
 		MenuContainer obj_menu_container = MenuContainer("Logged in as " + obj_user.get_email() + ".\nChoose one of the below options.\n(Esc to logout)\n");
 		if (bool_user_is_admin) {
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ViewGamesMenu("Manage games", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ManageGenresMenu("Manage genres", _ptr_class_container)));
-			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage users", _ptr_class_container)));
-			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage account", _ptr_class_container)));
+			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ManageUsersMenu("Manage users", _ptr_class_container)));
+			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UserUpdateOptionsMenu("Manage account", _ptr_class_container, _ptr_class_container.ptr_user_manager.get_current_user())));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Purchase history and reports", _ptr_class_container)));
 		}
 		else {
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ViewGamesMenu("View games", _ptr_class_container)));
-			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Manage account", _ptr_class_container)));
+			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UserUpdateOptionsMenu("Manage account", _ptr_class_container, _ptr_class_container.ptr_user_manager.get_current_user())));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("View purchase history", _ptr_class_container)));
 		}
 
@@ -119,31 +119,31 @@ void RegisterMenu::execute() {
 	std::string str_password_confirm = "";
 
 	system("cls");
-	std::cout << "Follow the prompts to register as a new user.\n\n";
-	std::cout << "Please enter your full name: ";
-	obj_user.set_full_name(validate::validate_string());
+	std::cout << "Follow the prompts to register a new user.\n\n";
+	std::cout << "Please enter full name: ";
+	obj_user.set_full_name(validate::validate_string(1, 30));
 
-	std::cout << "Please enter your age: ";
+	std::cout << "Please enter age: ";
 	obj_user.set_age(validate::validate_int(1, 150));
 
-	std::cout << "Please enter your email: ";
-	obj_user.set_email(validate::validate_string());
+	std::cout << "Please enter email: ";
+	obj_user.set_email(validate::validate_string(1, 45));
 
-	std::cout << "Please enter your password: ";
-	obj_user.set_password(validate::validate_string(8));
+	std::cout << "Please enter password: ";
+	obj_user.set_password(validate::validate_string(8, 256));
 
-	std::cout << "Please confirm your password: ";
-	str_password_confirm = validate::validate_string(8);
+	std::cout << "Please confirm password: ";
+	str_password_confirm = validate::validate_string(8, 256);
 
 	while (str_password_confirm != obj_user.get_password()) {
-		std::cout << "Passwords do not match, please confirm your password: ";
-		str_password_confirm = validate::validate_string();
+		std::cout << "Passwords do not match, please confirm password: ";
+		str_password_confirm = validate::validate_string(8, 256);
 	}
 
 	try {
-		_ptr_class_container.ptr_user_manager.register_user(&obj_user);
+		_ptr_class_container.ptr_user_manager.register_user(obj_user);
 
-		std::cout << "\nRegistration complete. User name is " << obj_user.get_email() << ".\nPlease now attempt to log in on the next screen.\n";
+		std::cout << "\nRegistration complete. User name is " << obj_user.get_email() << ".\n";
 
 		util::pause();
 	}
@@ -1120,5 +1120,278 @@ void UpdateGenreNameMenu::execute() {
 	catch (std::exception& ex) {
 		std::cout << "\nError: " << ex.what() << "\n";
 		util::pause();
+	}
+}
+
+void ManageUsersMenu::execute() {
+	KEY_EVENT_RECORD key{};
+	int i_highlighted_index = 0;
+	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	int i_current_page = 0;
+	int i_page_size = 10;
+	int i_page_count = 0;
+
+	try {
+		_ptr_class_container.ptr_user_manager.fetch_users();
+		std::vector<User>& vec_users = _ptr_class_container.ptr_user_manager.get_vec_users();
+		std::vector<User> vec_paged_users;
+
+		while (key.wVirtualKeyCode != VK_ESCAPE) {
+			system("cls");
+			std::cout << "Manage/Update users\n";
+			std::cout << "Use [Arrow Keys] to navigate users/pages, press [Enter] to select genre to manage\n";
+			std::cout << "Press [Esc] to go back\n";
+			std::cout << "Press [F1] to add new user\n\n";
+
+			std::cout << "NOTE: Users cannot be deleted, this is in order to preserve purchase history and maintain data integrity\n";
+			std::cout << "WARNING: Ensure that you leave at least one user with an admin status, otherwise once you log out there will not be any more admin users\n\n";
+
+			if (vec_users.size() < 1) {
+				// This should not be possible, but leaving it here in case something goes wrong while fetching/paging users.
+				std::cout << "There are currently no users to display.\n";
+			}
+			else {
+				i_page_count = ((int)vec_users.size() + i_page_size - 1) / i_page_size;
+
+				// As protection from index overflows, reset current page if it is more than the zero-index adjusted page count
+				// This is really a mess, but I can't think of many better ways of doing it.
+				if (i_current_page > (i_page_count - 1)) i_current_page = 0;
+
+				int i_final_item = 0;
+				if (((i_current_page * 10) + 10) > (int)vec_users.size() - 1) {
+					i_final_item = (int)vec_users.size();
+				}
+				else {
+					i_final_item = ((i_current_page * 10) + 10);
+				}
+
+				vec_paged_users = std::vector<User>(vec_users.begin() + (i_current_page * 10), vec_users.begin() + i_final_item);
+
+				util::output_users_header();
+				util::for_each_iterator(vec_paged_users.begin(), vec_paged_users.end(), 0, [&](int index, User& item) {
+					if (i_highlighted_index == index) {
+						SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
+						util::output_user(item);
+						SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+					}
+					else {
+						util::output_user(item);
+					}
+					});
+
+				std::cout << "\nPage " << i_current_page + 1 << " of " << i_page_count << "\n";
+			}
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_DOWN:
+				if (i_highlighted_index < (int)vec_paged_users.size() - 1) i_highlighted_index++;
+				break;
+			case VK_UP:
+				if (i_highlighted_index > 0) i_highlighted_index--;
+				break;
+			case VK_LEFT:
+				if (i_current_page > 0) {
+					i_current_page--;
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_RIGHT:
+				if (i_current_page + 1 < i_page_count) {
+					i_current_page++;
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_ESCAPE:
+				return;
+			case VK_F1:
+				RegisterMenu("Add user", _ptr_class_container).execute();
+				_ptr_class_container.ptr_user_manager.fetch_users();
+				vec_users = _ptr_class_container.ptr_user_manager.get_vec_users();
+				break;
+			case VK_RETURN:
+				if (vec_users.size() < 1) {
+					std::cout << "You cannot manage users when there are none to display.\n";
+					util::pause();
+					break;
+				}
+
+				if ((int)vec_paged_users.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					system("cls");
+					User& obj_user = vec_paged_users[i_highlighted_index];
+
+					ManageUserBaseMenu("Manage user", _ptr_class_container, obj_user).execute();
+					_ptr_class_container.ptr_user_manager.fetch_users();
+					vec_users = _ptr_class_container.ptr_user_manager.get_vec_users();
+					i_highlighted_index = 0;
+					break;
+				}
+				else {
+					std::cout << "Not a valid option, please try again.\n";
+					util::pause();
+					break;
+				}
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void ManageUserBaseMenu::execute() {
+	MenuContainer obj_menu_container = MenuContainer("");
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserNameMenu("Update full name", _ptr_class_container, _obj_user)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserAgeMenu("Update age", _ptr_class_container, _obj_user)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserEmailMenu("Update email", _ptr_class_container, _obj_user)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserPasswordMenu("Update password", _ptr_class_container, _obj_user)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserAdminStatusMenu("Update admin status", _ptr_class_container, _obj_user)));
+
+	while (!obj_menu_container.get_exit_menu()) {
+		obj_menu_container.set_menu_text("Selected user: " + _obj_user.get_email() + "\nChoose one of the below actions to perform against this user.\nPress [ESC] to cancel\n");
+		system("cls");
+		obj_menu_container.execute();
+	}
+}
+
+void UserUpdateOptionsMenu::execute() {
+	MenuContainer obj_menu_container = MenuContainer("Updating your account details\nChoose one of the below actions to perform against your account.\nPress [ESC] to cancel\n");
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserNameMenu("Update full name", _ptr_class_container, _obj_user)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserAgeMenu("Update age", _ptr_class_container, _obj_user)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserEmailMenu("Update email", _ptr_class_container, _obj_user)));
+	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserPasswordMenu("Update password", _ptr_class_container, _obj_user)));
+
+	while (!obj_menu_container.get_exit_menu()) {
+		system("cls");
+		obj_menu_container.execute();
+	}
+}
+
+void UpdateUserNameMenu::execute() {
+	system("cls");
+	std::string str_previous_name = _obj_user.get_full_name();
+	std::cout << "Updating full name, current name: '" << _obj_user.get_full_name() << "'\n\n";
+	std::cout << "Please enter new full name: ";
+	_obj_user.set_full_name(validate::validate_string(1, 30));
+
+	try {
+		_ptr_class_container.ptr_user_manager.update_user_fullname(_obj_user);
+		std::cout << "\nFull name updated to '" << _obj_user.get_full_name() << "' successfully.\n";
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		_obj_user.set_email(str_previous_name);
+		std::cout << "\nError: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void UpdateUserAgeMenu::execute() {
+	system("cls");
+	int i_previous_age = _obj_user.get_age();
+	std::cout << "Updating age, current age: '" << _obj_user.get_age() << "'\n\n";
+	std::cout << "Please enter new age: ";
+	_obj_user.set_age(validate::validate_int(1, 150));
+
+	try {
+		_ptr_class_container.ptr_user_manager.update_user_age(_obj_user);
+		std::cout << "\nAge updated to '" << _obj_user.get_age() << "' successfully.\n";
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		_obj_user.set_age(i_previous_age);
+		std::cout << "\nError: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void UpdateUserEmailMenu::execute() {
+	system("cls");
+	std::string str_previous_email = _obj_user.get_email();
+	std::cout << "Updating email, current email: '" << _obj_user.get_email() << "'\nPlease note that this email must be unique\n\n";
+	std::cout << "Please enter new email: ";
+	_obj_user.set_email(validate::validate_string(1, 45));
+
+	try {
+		_ptr_class_container.ptr_user_manager.update_user_email(_obj_user);
+		std::cout << "\nEmail updated to '" << _obj_user.get_email() << "' successfully.\n";
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		_obj_user.set_email(str_previous_email);
+		std::cout << "\nError: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void UpdateUserPasswordMenu::execute() {
+	system("cls");
+	std::string str_previous_password = _obj_user.get_password();
+	std::string str_confirm_password;
+	std::cout << "Updating password\n\n";
+	std::cout << "Please enter new password: ";
+	_obj_user.set_password(validate::validate_string(8, 256));
+
+	std::cout << "\nPlease confirm password: ";
+	str_confirm_password = validate::validate_string(8, 256);
+
+	while (_obj_user.get_password() != str_confirm_password) {
+		std::cout << "\nPasswords do not match, please try again\n";
+		std::cout << "\nPlease confirm password: ";
+		str_confirm_password = validate::validate_string(8, 256);
+	}
+
+	try {
+		_ptr_class_container.ptr_user_manager.update_user_password(_obj_user);
+		std::cout << "\nPassword updated successfully.\n";
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		_obj_user.set_password(str_previous_password);
+		std::cout << "\nError: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void UpdateUserAdminStatusMenu::execute() {
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	KEY_EVENT_RECORD key{};
+	bool bool_previous_admin_status = _obj_user.get_is_admin();
+
+	system("cls");
+	std::cout << "Are you sure you want to change admin status of '" << _obj_user.get_email() << "' from " << (_obj_user.get_is_admin() ? "True" : "False") << " to " << (!_obj_user.get_is_admin() ? "True" : "False") << "?\n";
+	std::cout << "Press [Enter] to confirm, or [Esc] to cancel\n";
+
+	while (key.wVirtualKeyCode != VK_RETURN) {
+		while (!validate::get_control_char(key, h_input_console));
+
+		switch (key.wVirtualKeyCode)
+		{
+		case VK_RETURN:
+			try {
+				_obj_user.set_is_admin(!_obj_user.get_is_admin());
+				_ptr_class_container.ptr_user_manager.change_user_admin_status(_obj_user);
+				std::cout << "\n'" << _obj_user.get_email() << "' admin status successfully updated.\n";
+				util::pause();
+				break;
+			}
+			catch (std::exception& ex) {
+				_obj_user.set_is_admin(bool_previous_admin_status);
+				std::cout << "\nError: " << ex.what() << "\n";
+				util::pause();
+				return;
+			}
+			break;
+		case VK_ESCAPE:
+			return;
+		default:
+			break;
+		}
 	}
 }

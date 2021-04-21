@@ -17,3 +17,12 @@ User::User(std::string str_full_name, int i_age, std::string str_email, std::str
 	_str_password = str_password;
 	_bool_is_admin = bool_is_admin;
 };
+
+User::User(int i_id, std::string str_full_name, int i_age, std::string str_email, std::string str_password, bool bool_is_admin) {
+	_i_id = i_id;
+	_str_full_name = str_full_name;
+	_i_age = i_age;
+	_str_email = str_email;
+	_str_password = str_password;
+	_bool_is_admin = bool_is_admin;
+}

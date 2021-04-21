@@ -322,9 +322,9 @@ void GameManager::delete_genre(Genre& obj_genre) {
 
 void GameManager::update_genre_name(int i_genre_id, std::string str_genre_name) {
 	sqlite3_stmt* stmt_update_genre_name;
-	std::string str_delete_genre = "UPDATE genres SET genre = ? WHERE id = ?";
+	std::string str_update_genre_name = "UPDATE genres SET genre = ? WHERE id = ?";
 
-	if (sqlite3_prepare_v2(_db, str_delete_genre.c_str(), -1, &stmt_update_genre_name, NULL) != SQLITE_OK) {
+	if (sqlite3_prepare_v2(_db, str_update_genre_name.c_str(), -1, &stmt_update_genre_name, NULL) != SQLITE_OK) {
 		std::string str_error_msg = "Failed to prepare insert statement: ";
 		str_error_msg = str_error_msg + (char*)sqlite3_errmsg(_db);
 		throw std::runtime_error(str_error_msg);

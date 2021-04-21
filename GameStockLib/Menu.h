@@ -214,6 +214,80 @@ public:
     void execute();
 };
 
+/// <summary>
+/// Displays all users in system and allows each to be selected in order to update them.
+/// </summary>
+class ManageUsersMenu : public GeneralMenuItem {
+public:
+    ManageUsersMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+/// <summary>
+/// Base menu of other menus related to user management, and displays these other menu options upon execution.
+/// </summary>
+class ManageUserBaseMenu : public GeneralMenuItem {
+protected:
+    User& _obj_user;
+public:
+    ManageUserBaseMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : GeneralMenuItem(output, ptr_class_container), _obj_user(obj_user) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageUserBaseMenu, used to perform an update to a user name
+/// </summary>
+class UserUpdateOptionsMenu : public ManageUserBaseMenu {
+public:
+    UserUpdateOptionsMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ManageUserBaseMenu(output, ptr_class_container, obj_user) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageUserBaseMenu, used to perform an update to a user name
+/// </summary>
+class UpdateUserNameMenu : public ManageUserBaseMenu {
+public:
+    UpdateUserNameMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ManageUserBaseMenu(output, ptr_class_container, obj_user) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageUserBaseMenu, used to perform an update to a user age
+/// </summary>
+class UpdateUserAgeMenu : public ManageUserBaseMenu {
+public:
+    UpdateUserAgeMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ManageUserBaseMenu(output, ptr_class_container, obj_user) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageUserBaseMenu, used to perform an update to a user email
+/// </summary>
+class UpdateUserEmailMenu : public ManageUserBaseMenu {
+public:
+    UpdateUserEmailMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ManageUserBaseMenu(output, ptr_class_container, obj_user) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageUserBaseMenu, used to perform an update to a user password
+/// </summary>
+class UpdateUserPasswordMenu : public ManageUserBaseMenu {
+public:
+    UpdateUserPasswordMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ManageUserBaseMenu(output, ptr_class_container, obj_user) {};
+    void execute();
+};
+
+/// <summary>
+/// Implements ManageUserBaseMenu, used to perform an update to user admin status
+/// </summary>
+class UpdateUserAdminStatusMenu : public ManageUserBaseMenu {
+public:
+    UpdateUserAdminStatusMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ManageUserBaseMenu(output, ptr_class_container, obj_user) {};
+    void execute();
+};
+
 class SubMenuExample : public GeneralMenuItem {
 public:
     SubMenuExample(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};

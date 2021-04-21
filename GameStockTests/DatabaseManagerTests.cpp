@@ -43,6 +43,7 @@ namespace GameStockTests
 
 		TEST_METHOD(insert_initial) {
 			dbManager.connect(testDatabaseName);
+			dbManager.create_tables_if_not_exist();
 			dbManager.insert_initial();
 			
 			sqlite3_stmt* stmt_status;
