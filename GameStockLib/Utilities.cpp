@@ -54,3 +54,34 @@ void util::output_user(User& obj_user) {
 		<< std::setw(45) << std::left << obj_user.get_email()
 		<< std::setw(11) << std::left << (obj_user.get_is_admin() ? "True" : "False") << "\n";
 }
+
+void util::output_purchase_header() {
+	std::cout << "---------------------------------------------\n";
+	std::cout << std::setw(25) << std::left << "Purchase date" << std::setw(20) << std::left << "Total" << "\n";
+	std::cout << "---------------------------------------------\n";
+}
+
+void util::output_purchase(Purchase& obj_purchase) {
+	std::cout.precision(2);
+	std::cout
+		<< std::fixed
+		<< std::setw(25) << std::left << obj_purchase.get_date()
+		<< std::setw(20) << std::left << obj_purchase.get_total() << "\n";
+}
+
+void util::output_purchase_item_header() {
+	std::cout << "-------------------------------------------------------------------------------------------------------\n";
+	std::cout << std::setw(45) << std::left << "Game Name" << std::setw(9) << std::left << "Copies" << std::setw(15) << std::left << "Game cost" << std::setw(15) << std::left << "Total" << std::setw(20) << std::left << "Total (before VAT)" << "\n";
+	std::cout << "-------------------------------------------------------------------------------------------------------\n";
+}
+
+void util::output_purchase_item(PurchaseItem& obj_purchase_item) {
+	std::cout.precision(2);
+	std::cout
+		<< std::fixed
+		<< std::setw(45) << std::left << obj_purchase_item.get_game().get_name()
+		<< std::setw(9) << std::left << obj_purchase_item.get_count()
+		<< std::setw(15) << std::left << obj_purchase_item.get_price()
+		<< std::setw(15) << std::left << obj_purchase_item.get_total()
+		<< std::setw(20) << std::left << obj_purchase_item.get_total_before_vat() << "\n";
+}

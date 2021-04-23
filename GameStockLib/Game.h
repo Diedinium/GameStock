@@ -13,8 +13,9 @@ class Game
 	int _i_copies;
 public:
 	Game();
-	Game(std::string, Genre, Rating, double, int);
-	Game(int, std::string, Genre, Rating, double, int);
+	Game(std::string str_name, Genre obj_genre, Rating obj_rating);
+	Game(std::string str_name, Genre obj_genre, Rating obj_rating, double d_price, int i_copies);
+	Game(int i_id, std::string str_name, Genre obj_genre, Rating obj_rating, double d_price, int i_copies);
 
 	int get_id() { return _i_id; }
 	void set_id(int i_id) { _i_id = i_id; }

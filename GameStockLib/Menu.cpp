@@ -75,11 +75,11 @@ void LoginMenu::execute() {
 	std::cout << "Please enter your password: ";
 	obj_user.set_password(validate::validate_string());*/
 
-	obj_user.set_email("admin@gamestock.com");
-	obj_user.set_password("somesecureadminpassword");
+	//obj_user.set_email("admin@gamestock.com");
+	//obj_user.set_password("somesecureadminpassword");
 
-	//obj_user.set_email("email@email.com");
-	//obj_user.set_password("password");
+	obj_user.set_email("sometest@test.com");
+	obj_user.set_password("password");
 
 	try {
 		_ptr_class_container.ptr_user_manager.attempt_login(obj_user);
@@ -91,12 +91,12 @@ void LoginMenu::execute() {
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ManageGenresMenu("Manage genres", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ManageUsersMenu("Manage users", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UserUpdateOptionsMenu("Manage account", _ptr_class_container, _ptr_class_container.ptr_user_manager.get_current_user())));
-			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Purchase history and reports", _ptr_class_container)));
+			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new SelectUserPurchasesViewMenu("Purchase history and reports", _ptr_class_container)));
 		}
 		else {
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ViewGamesMenu("View games", _ptr_class_container)));
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UserUpdateOptionsMenu("Manage account", _ptr_class_container, _ptr_class_container.ptr_user_manager.get_current_user())));
-			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("View purchase history", _ptr_class_container)));
+			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ViewUserPurchasesMenu("View purchase history", _ptr_class_container, _ptr_class_container.ptr_user_manager.get_current_user())));
 		}
 
 		while (!obj_menu_container.get_exit_menu()) {
@@ -645,17 +645,6 @@ void ViewBasketMenu::execute() {
 		default:
 			break;
 		}
-	}
-}
-
-void SubMenuExample::execute() {
-	MenuContainer obj_menu_container = MenuContainer("Sub menu example.\nChoose one of the below options.\n");
-	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 1", _ptr_class_container)));
-	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DummyMenu("Example item 2", _ptr_class_container)));
-
-	while (!obj_menu_container.get_exit_menu()) {
-		system("cls");
-		obj_menu_container.execute();
 	}
 }
 
@@ -1393,5 +1382,287 @@ void UpdateUserAdminStatusMenu::execute() {
 		default:
 			break;
 		}
+	}
+}
+
+void SelectUserPurchasesViewMenu::execute() {
+	KEY_EVENT_RECORD key{};
+	int i_highlighted_index = 0;
+	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	int i_current_page = 0;
+	int i_page_size = 10;
+	int i_page_count = 0;
+
+	try {
+		_ptr_class_container.ptr_user_manager.fetch_users(true);
+		std::vector<User>& vec_users = _ptr_class_container.ptr_user_manager.get_vec_users();
+		std::vector<User> vec_paged_users;
+
+		while (key.wVirtualKeyCode != VK_ESCAPE) {
+			system("cls");
+			std::cout << "Select user who's purchases you would like to view\n";
+			std::cout << "Use [Arrow Keys] to navigate users/pages, press [Enter] to view user purchase history\n";
+			std::cout << "Press [Esc] to go back\n";
+			std::cout << "Press [F1] to generate all purchases summary\n\n";
+
+			std::cout << "NOTE: There are 3 levels of report you can create/view; all purchases summary, user specific summary or purchase specific summary,\n";
+			std::cout << "      you must select a user in order to view the latter two types of summary (user specific and purchase specific).\n";
+
+			if (vec_users.size() < 1) {
+				// This should not be possible, but leaving it here in case something goes wrong while fetching/paging users.
+				std::cout << "There are currently no non-admin users to display.\n";
+			}
+			else {
+				i_page_count = ((int)vec_users.size() + i_page_size - 1) / i_page_size;
+
+				// As protection from index overflows, reset current page if it is more than the zero-index adjusted page count
+				// This is really a mess, but I can't think of many better ways of doing it.
+				if (i_current_page > (i_page_count - 1)) i_current_page = 0;
+
+				int i_final_item = 0;
+				if (((i_current_page * 10) + 10) > (int)vec_users.size() - 1) {
+					i_final_item = (int)vec_users.size();
+				}
+				else {
+					i_final_item = ((i_current_page * 10) + 10);
+				}
+
+				vec_paged_users = std::vector<User>(vec_users.begin() + (i_current_page * 10), vec_users.begin() + i_final_item);
+
+				util::output_users_header();
+				util::for_each_iterator(vec_paged_users.begin(), vec_paged_users.end(), 0, [&](int index, User& item) {
+					if (i_highlighted_index == index) {
+						SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
+						util::output_user(item);
+						SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+					}
+					else {
+						util::output_user(item);
+					}
+					});
+
+				std::cout << "\nPage " << i_current_page + 1 << " of " << i_page_count << "\n";
+			}
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_DOWN:
+				if (i_highlighted_index < (int)vec_paged_users.size() - 1) i_highlighted_index++;
+				break;
+			case VK_UP:
+				if (i_highlighted_index > 0) i_highlighted_index--;
+				break;
+			case VK_LEFT:
+				if (i_current_page > 0) {
+					i_current_page--;
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_RIGHT:
+				if (i_current_page + 1 < i_page_count) {
+					i_current_page++;
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_ESCAPE:
+				return;
+			case VK_F1:
+				std::cout << "Does nothing yet until the summary menu is implemented :)\n";
+				util::pause();
+				break;
+			case VK_RETURN:
+				if (vec_users.size() < 1) {
+					std::cout << "You cannot select a user when there are none to display.\n";
+					util::pause();
+					break;
+				}
+
+				if ((int)vec_paged_users.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					system("cls");
+					User& obj_user = vec_paged_users[i_highlighted_index];
+
+					ViewUserPurchasesMenu("View user purchases", _ptr_class_container, obj_user).execute();
+					break;
+				}
+				else {
+					std::cout << "Not a valid option, please try again.\n";
+					util::pause();
+					break;
+				}
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void ViewUserPurchasesMenu::execute() {
+	KEY_EVENT_RECORD key{};
+	int i_highlighted_index = 0;
+	HANDLE h_output_console = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+	int i_current_page = 0;
+	int i_page_size = 10;
+	int i_page_count = 0;
+	bool bool_admin_status = _ptr_class_container.ptr_user_manager.get_current_user().get_is_admin();
+
+	try {
+		_ptr_class_container.ptr_purchase_manager.fetch_purchases(_obj_user);
+		std::vector<Purchase>& vec_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
+		std::vector<Purchase> vec_paged_purchases;
+
+		while (key.wVirtualKeyCode != VK_ESCAPE) {
+			system("cls");
+			if (bool_admin_status) {
+				std::cout << "Viewing purchase history of: '" << _obj_user.get_email() << "'\n";
+			}
+			else {
+				std::cout << "Select a purchase history you would like to view\n";
+			}
+			std::cout << "Use [Arrow Keys] to navigate purchases/pages, press [Enter] to view purchase items/summary\n";
+			std::cout << "Press [Esc] to go back\n";
+			std::cout << "Press [F1] to generate summary of all purchases\n\n";
+
+			if (vec_purchases.size() < 1) {
+				// This should not be possible, but leaving it here in case something goes wrong while fetching/paging users.
+				std::cout << "There are currently no purchases to display.\n";
+			}
+			else {
+				i_page_count = ((int)vec_purchases.size() + i_page_size - 1) / i_page_size;
+
+				// As protection from index overflows, reset current page if it is more than the zero-index adjusted page count
+				// This is really a mess, but I can't think of many better ways of doing it.
+				if (i_current_page > (i_page_count - 1)) i_current_page = 0;
+
+				int i_final_item = 0;
+				if (((i_current_page * 10) + 10) > (int)vec_purchases.size() - 1) {
+					i_final_item = (int)vec_purchases.size();
+				}
+				else {
+					i_final_item = ((i_current_page * 10) + 10);
+				}
+
+				vec_paged_purchases = std::vector<Purchase>(vec_purchases.begin() + (i_current_page * 10), vec_purchases.begin() + i_final_item);
+
+				util::output_purchase_header();
+				util::for_each_iterator(vec_paged_purchases.begin(), vec_paged_purchases.end(), 0, [&](int index, Purchase& item) {
+					if (i_highlighted_index == index) {
+						SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
+						util::output_purchase(item);
+						SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
+					}
+					else {
+						util::output_purchase(item);
+					}
+					});
+
+				std::cout << "\nPage " << i_current_page + 1 << " of " << i_page_count << "\n";
+			}
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_DOWN:
+				if (i_highlighted_index < (int)vec_paged_purchases.size() - 1) i_highlighted_index++;
+				break;
+			case VK_UP:
+				if (i_highlighted_index > 0) i_highlighted_index--;
+				break;
+			case VK_LEFT:
+				if (i_current_page > 0) {
+					i_current_page--;
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_RIGHT:
+				if (i_current_page + 1 < i_page_count) {
+					i_current_page++;
+					i_highlighted_index = 0;
+				}
+				break;
+			case VK_ESCAPE:
+				return;
+			case VK_F1:
+				std::cout << "Does nothing yet until the summary menu is implemented :)\n";
+				util::pause();
+				break;
+			case VK_RETURN:
+				if (vec_purchases.size() < 1) {
+					std::cout << "You cannot select a purchase when there are none to display.\n";
+					util::pause();
+					break;
+				}
+
+				if ((int)vec_paged_purchases.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					system("cls");
+					Purchase& obj_purchase = vec_paged_purchases[i_highlighted_index];
+
+					ViewUserPurchaseItemsMenu("View user purchase details", _ptr_class_container, obj_purchase).execute();
+					break;
+				}
+				else {
+					std::cout << "Not a valid option, please try again.\n";
+					util::pause();
+					break;
+				}
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+
+void ViewUserPurchaseItemsMenu::execute() {
+	KEY_EVENT_RECORD key{};
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+
+	try {
+		_ptr_class_container.ptr_purchase_manager.populate_purchase_details(_obj_purchase);
+		std::vector<PurchaseItem>& vec_purchase_items = _obj_purchase.get_vec_purchase_items();
+
+		while (key.wVirtualKeyCode != VK_ESCAPE) {
+			system("cls");
+			std::cout << "Summary of purchase placed on: " << _obj_purchase.get_date() << "\n";
+			std::cout << "Press [Esc] to go back\n";
+			std::cout << "Press [F1] to save this purchase invoice\n\n";
+
+			util::output_purchase_item_header();
+			util::for_each_iterator(vec_purchase_items.begin(), vec_purchase_items.end(), 0, [&](int index, PurchaseItem& item) {
+					util::output_purchase_item(item);
+				});
+
+			std::cout << std::setprecision(2) << std::fixed << "\nTotal: " << _obj_purchase.get_total();
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_ESCAPE:
+				return;
+			case VK_F1:
+				std::cout << "Does nothing yet until the invoice output menu is implemented :)\n";
+				util::pause();
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
 	}
 }

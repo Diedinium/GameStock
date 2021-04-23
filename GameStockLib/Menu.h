@@ -6,6 +6,7 @@
 #include "Utilities.h"
 #include "InputValidator.h"
 #include "User.h"
+#include "Purchase.h"
 #include "PurchaseItem.h"
 #include "ClassContainer.h"
 #include "Game.h"
@@ -171,12 +172,18 @@ public:
     void execute();
 };
 
+/// <summary>
+/// Allows an admin level user to manage available game genres
+/// </summary>
 class ManageGenresMenu : public GeneralMenuItem {
 public:
     ManageGenresMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
+/// <summary>
+/// Allows admin user to specify new game genre to add.
+/// </summary>
 class AddGenreMenu : public GeneralMenuItem {
 public:
     AddGenreMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
@@ -288,9 +295,25 @@ public:
     void execute();
 };
 
-class SubMenuExample : public GeneralMenuItem {
+class SelectUserPurchasesViewMenu : public GeneralMenuItem {
 public:
-    SubMenuExample(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    SelectUserPurchasesViewMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
+    void execute();
+};
+
+class ViewUserPurchasesMenu : public GeneralMenuItem {
+protected:
+    User& _obj_user;
+public:
+    ViewUserPurchasesMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : GeneralMenuItem(output, ptr_class_container), _obj_user(obj_user) {};
+    void execute();
+};
+
+class ViewUserPurchaseItemsMenu : public GeneralMenuItem {
+protected:
+    Purchase& _obj_purchase;
+public:
+    ViewUserPurchaseItemsMenu(std::string output, ClassContainer& ptr_class_container, Purchase& obj_purchase) : GeneralMenuItem(output, ptr_class_container), _obj_purchase(obj_purchase) {};
     void execute();
 };
 

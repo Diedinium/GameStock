@@ -29,7 +29,7 @@ public:
 	/// <summary>
 	/// Gets all users from database in order of email, populates _vec_users
 	/// </summary>
-	void fetch_users();
+	void fetch_users(bool no_admins = false);
 
 	/// <summary>
 	/// Pass in user object to update, password stored in obj_user will be used to then persist the password to the database.

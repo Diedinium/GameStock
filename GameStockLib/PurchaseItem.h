@@ -15,6 +15,7 @@ public:
 	PurchaseItem(int i_game_id, int i_count, double d_price);
 	PurchaseItem(int i_game_id, Game obj_game, int i_count, double d_price);
 	PurchaseItem(int i_id, int i_purchase_id, int i_game_id, Game obj_game, int i_count, double d_price);
+	PurchaseItem(int i_id, std::string str_game_name, double d_game_price, std::string str_game_genre, std::string str_game_rating, int i_count, double d_total);
 
 	int get_id() { return _i_id; }
 	int get_purchase_id() { return _i_purchase_id; }
@@ -25,6 +26,6 @@ public:
 	double get_total_before_vat() { return _d_total * 0.8; }
 
 	int get_count() { return _i_count; }
-	void set_count(int i_count) { _i_count = i_count; }
+	void set_count(int i_count);
 };
 

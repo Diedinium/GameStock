@@ -52,11 +52,13 @@ void UserManager::logout() {
 	_obj_current_user = User();
 }
 
-void UserManager::fetch_users() {
+void UserManager::fetch_users(bool no_admins) {
 	_vec_users.clear();
 	sqlite3_stmt* stmt_fetch_users;
 
 	std::string str_sql = "SELECT * FROM users ORDER BY email";
+
+	if (no_admins) str_sql = "SELECT * FROM users WHERE is_admin = 0 ORDER BY email";
 
 	sqlite3_prepare_v2(_db, str_sql.c_str(), -1, &stmt_fetch_users, NULL);
 	while (sqlite3_step(stmt_fetch_users) == SQLITE_ROW) {

@@ -4,6 +4,7 @@
 #include <conio.h>
 #include <vector>
 #include "Game.h"
+#include "Purchase.h"
 #include "PurchaseItem.h"
 #include "User.h"
 
@@ -76,14 +77,60 @@ namespace util {
 		return number < compare;
 	}
 
+	/// <summary>
+	/// Outputs the header for displaying the game table
+	/// </summary>
 	void output_games_header();
+
+	/// <summary>
+	/// Outputs an individual game item (row) for the game table
+	/// </summary>
+	/// <param name="obj_game"></param>
 	void output_game(Game& obj_game);
 
+	/// <summary>
+	/// Outputs the header for displaying the basket table
+	/// </summary>
 	void output_basket_header();
+
+	/// <summary>
+	/// Outputs an individual basket item for the basket table
+	/// </summary>
+	/// <param name="obj_purchase_item"></param>
 	void output_basket_item(PurchaseItem& obj_purchase_item);
 
+	/// <summary>
+	/// Outputs the header for displaying the user table
+	/// </summary>
 	void output_users_header();
+
+	/// <summary>
+	/// Outputs an individual user for the user table
+	/// </summary>
+	/// <param name="obj_user"></param>
 	void output_user(User& obj_user);
+
+	/// <summary>
+	/// Outputs the header for displaying the purchase table
+	/// </summary>
+	void output_purchase_header();
+
+	/// <summary>
+	/// Outputs an indivual purchase for the purchase table
+	/// </summary>
+	/// <param name="obj_purchase"></param>
+	void output_purchase(Purchase& obj_purchase);
+
+	/// <summary>
+	/// Outputs the header for displaying the purchase item/details table
+	/// </summary>
+	void output_purchase_item_header();
+
+	/// <summary>
+	/// Outputs an individual purchase item (row) for the purchase item/detail table
+	/// </summary>
+	/// <param name="obj_purchase_item"></param>
+	void output_purchase_item(PurchaseItem& obj_purchase_item);
 
 	void pause();
 }
