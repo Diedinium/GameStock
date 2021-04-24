@@ -61,3 +61,7 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+GameStockLib/sqlite3.c linguist-vendored
+GameStockLib/sqlite3.h linguist-vendored
+GameStockLib/sqlite3ext.h linguist-vendored
