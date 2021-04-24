@@ -78,7 +78,7 @@ void LoginMenu::execute() {
 	//obj_user.set_email("admin@gamestock.com");
 	//obj_user.set_password("somesecureadminpassword");
 
-	obj_user.set_email("sometest@test.com");
+	obj_user.set_email("email@email.com");
 	obj_user.set_password("password");
 
 	try {
@@ -623,9 +623,8 @@ void ViewBasketMenu::execute() {
 			}
 
 			if ((int)vec_basket_items.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
-				system("cls");
 				PurchaseItem obj_purchase_item = vec_basket_items[i_highlighted_index];
-				std::cout << "Removing '" << obj_purchase_item.get_game().get_name() << "' from basket...\n";
+				std::cout << "\nRemoving '" << obj_purchase_item.get_game().get_name() << "' from basket...\n";
 
 				_ptr_class_container.ptr_game_manager.remove_basket_item(obj_purchase_item.get_game_id());
 				if (i_highlighted_index > (int)vec_basket_items.size() - 1) {
@@ -1404,7 +1403,7 @@ void SelectUserPurchasesViewMenu::execute() {
 			std::cout << "Select user who's purchases you would like to view\n";
 			std::cout << "Use [Arrow Keys] to navigate users/pages, press [Enter] to view user purchase history\n";
 			std::cout << "Press [Esc] to go back\n";
-			std::cout << "Press [F1] to generate all purchases summary\n\n";
+			std::cout << "Press [F1] to generate all user purchases summary\n\n";
 
 			std::cout << "NOTE: There are 3 levels of report you can create/view; all purchases summary, user specific summary or purchase specific summary,\n";
 			std::cout << "      you must select a user in order to view the latter two types of summary (user specific and purchase specific).\n";
@@ -1430,15 +1429,15 @@ void SelectUserPurchasesViewMenu::execute() {
 
 				vec_paged_users = std::vector<User>(vec_users.begin() + (i_current_page * 10), vec_users.begin() + i_final_item);
 
-				util::output_users_header();
+				util::output_users_header(false);
 				util::for_each_iterator(vec_paged_users.begin(), vec_paged_users.end(), 0, [&](int index, User& item) {
 					if (i_highlighted_index == index) {
 						SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
-						util::output_user(item);
+						util::output_user(item, false);
 						SetConsoleTextAttribute(h_output_console, FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED);
 					}
 					else {
-						util::output_user(item);
+						util::output_user(item, false);
 					}
 					});
 
@@ -1470,8 +1469,7 @@ void SelectUserPurchasesViewMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
-				std::cout << "Does nothing yet until the summary menu is implemented :)\n";
-				util::pause();
+				if (vec_users.size() > 0) AllUserPurchaseSummaryMenu("User purchases summary", _ptr_class_container, vec_users).execute();
 				break;
 			case VK_RETURN:
 				if (vec_users.size() < 1) {
@@ -1591,8 +1589,9 @@ void ViewUserPurchasesMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
-				std::cout << "Does nothing yet until the summary menu is implemented :)\n";
-				util::pause();
+				if (vec_purchases.size() > 0) {
+					ViewUserPurchasesSummaryMenu("Purchase summary", _ptr_class_container, _obj_user).execute();
+				}
 				break;
 			case VK_RETURN:
 				if (vec_purchases.size() < 1) {
@@ -1624,7 +1623,6 @@ void ViewUserPurchasesMenu::execute() {
 	}
 }
 
-
 void ViewUserPurchaseItemsMenu::execute() {
 	KEY_EVENT_RECORD key{};
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
@@ -1635,16 +1633,24 @@ void ViewUserPurchaseItemsMenu::execute() {
 
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
-			std::cout << "Summary of purchase placed on: " << _obj_purchase.get_date() << "\n";
-			std::cout << "Press [Esc] to go back\n";
-			std::cout << "Press [F1] to save this purchase invoice\n\n";
+			std::cout << "Summary of purchase placed on: " << _obj_purchase.get_date() << "\n\n";
 
 			util::output_purchase_item_header();
 			util::for_each_iterator(vec_purchase_items.begin(), vec_purchase_items.end(), 0, [&](int index, PurchaseItem& item) {
-					util::output_purchase_item(item);
+				util::output_purchase_item(item);
 				});
 
-			std::cout << std::setprecision(2) << std::fixed << "\nTotal: " << _obj_purchase.get_total();
+			std::cout << "\n";
+			std::cout.precision(2);
+			std::cout <<
+				std::fixed <<
+				std::setw(16) << std::left << "Purchase total: " <<
+				std::setw(15) << std::left << _obj_purchase.get_total() <<
+				std::setw(19) << std::left << "Total Game copies: " <<
+				std::setw(10) << std::left << _obj_purchase.get_total_game_copies() << "\n";
+
+			std::cout << "\nPress [Esc] to go back\n";
+			std::cout << "Press [F1] to save this purchase items invoice\n\n";
 
 			while (!validate::get_control_char(key, h_input_console));
 
@@ -1653,13 +1659,326 @@ void ViewUserPurchaseItemsMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
-				std::cout << "Does nothing yet until the invoice output menu is implemented :)\n";
-				util::pause();
+				ViewUserPurchaseItemsSaveMenu("Save purchase summary", _ptr_class_container, _obj_purchase).execute();
 				break;
 			default:
 				break;
 			}
 		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void AllUserPurchaseSummaryMenu::execute() {
+	KEY_EVENT_RECORD key{};
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+
+	try {
+		while (key.wVirtualKeyCode != VK_ESCAPE) {
+			double d_all_purchase_total = 0;
+			system("cls");
+			std::cout << "All user purchases summary\n";
+			std::cout << "This summary shows each user and if they have made any purchases displays each purchase with a calculated total.\nSee the end of the report for a grand total/average\n";
+
+			util::for_each_iterator(_vec_users.begin(), _vec_users.end(), 0, [&](int index, User& user) {
+				std::cout << "\nSummary for user: " << user.get_email() << "\n\n";
+				_ptr_class_container.ptr_purchase_manager.fetch_purchases(user);
+				std::vector<Purchase>& vec_user_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
+
+				if (vec_user_purchases.size() > 0) {
+					std::cout << "Purchases: \n";
+					for (Purchase& purchase : vec_user_purchases) {
+						std::cout.precision(2);
+						std::cout <<
+							std::fixed <<
+							std::setw(6) << std::left << "Date: " <<
+							std::setw(25) << std::left << purchase.get_date() <<
+							std::setw(7) << std::left << "Total: " <<
+							std::setw(15) << std::left << purchase.get_total() << "\n";
+					}
+
+					std::cout.precision(2);
+					std::cout <<
+						std::fixed <<
+						std::setw(23) << std::left << "\nUser purchases total: " <<
+						std::setw(15) << std::left << _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total() <<
+						std::setw(27) << std::left << "User purchases average: " <<
+						std::setw(15) << std::left << _ptr_class_container.ptr_purchase_manager.get_purchase_average() << "\n";
+
+					d_all_purchase_total = d_all_purchase_total + _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total();
+				}
+				else {
+					std::cout << "This user has not yet made any purchases\n";
+				}
+				std::cout << "__________________________________________________________________________________________\n";
+				});
+
+			std::cout << "\nAll purchases total: " << d_all_purchase_total << "\n";
+			std::cout << "All purchases average: " << d_all_purchase_total / _vec_users.size() << "\n";
+
+			std::cout << "\nNOTE: The above average assumes that for users who have made no purchases the total of their purchases is zero.\n";
+
+			std::cout << "\nPress [Esc] to go back\n";
+			std::cout << "Press [F1] to generate all user purchases summary\n\n";
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_ESCAPE:
+				return;
+			case VK_F1:
+				AllUserPurchaseSaveMenu("Save all user purchase summary", _ptr_class_container, _vec_users).execute();
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void ViewUserPurchasesSummaryMenu::execute() {
+	KEY_EVENT_RECORD key{};
+	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
+
+	try {
+		_ptr_class_container.ptr_purchase_manager.fetch_purchases(_obj_user);
+		std::vector<Purchase>& vec_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
+
+		for (Purchase& purchase : vec_purchases) {
+			_ptr_class_container.ptr_purchase_manager.populate_purchase_details(purchase);
+		}
+
+		while (key.wVirtualKeyCode != VK_ESCAPE) {
+			system("cls");
+			std::cout << "Purchase summary for: " << _obj_user.get_email() << "\n";
+			std::cout << "\nBelow is a summary of each purchase made, the items in the purchase, total of the individual purchase, purchase total, game copies total and a grand total at the end.\n";
+
+			if (vec_purchases.size() < 1) {
+				// This should not be possible, but leaving it here in case something goes wrong.
+				std::cout << "There are currently no purchases to display.\n";
+			}
+			else {
+				util::for_each_iterator(vec_purchases.begin(), vec_purchases.end(), 0, [&](int index, Purchase& purchase) {
+					std::cout << "\n";
+					std::cout << "Purchase date: " << purchase.get_date() << "\n";
+
+					util::output_purchase_item_header();
+					for (PurchaseItem& purchase_item : purchase.get_vec_purchase_items()) {
+						util::output_purchase_item(purchase_item);
+					}
+
+					std::cout << "\n";
+					std::cout.precision(2);
+					std::cout <<
+						std::fixed <<
+						std::setw(16) << std::left << "Purchase total: " <<
+						std::setw(15) << std::left << purchase.get_total() <<
+						std::setw(19) << std::left << "Total Game copies: " <<
+						std::setw(10) << std::left << purchase.get_total_game_copies() << "\n";
+					std::cout << "_______________________________________________________________________________________________________\n";
+					});
+
+				std::cout << std::setprecision(2) << std::fixed << "\nPurchases grand total: " << _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total() << "\n";
+				std::cout << std::setprecision(2) << std::fixed << "Purchases grand total (Before VAT): " << _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total() * 0.8 << "\n";
+				std::cout << std::setprecision(2) << std::fixed << "Average purchase total: " << _ptr_class_container.ptr_purchase_manager.get_purchase_average() << "\n";
+				std::cout << std::setprecision(2) << std::fixed << "Total game copies: " << _ptr_class_container.ptr_purchase_manager.get_total_game_copies() << "\n";
+
+				std::cout << "\nPress [Esc] to go back\n";
+				std::cout << "Press [F1] to save this user purchases summary\n";
+			}
+
+			while (!validate::get_control_char(key, h_input_console));
+
+			switch (key.wVirtualKeyCode)
+			{
+			case VK_ESCAPE:
+				return;
+			case VK_F1:
+				if (vec_purchases.size() > 0) ViewUserPurchasesSaveMenu("Save user purchases summary", _ptr_class_container, _obj_user).execute();
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void AllUserPurchaseSaveMenu::execute() {
+	std::tm tm_current_datetime = util::get_current_datetime();
+	std::string str_current_datetime = util::tm_to_filesafe_str(tm_current_datetime);
+	std::string str_file_name = "AllUserPurchasesReport_" + str_current_datetime + ".txt";
+	std::filesystem::path path_file_to_write = _ptr_class_container.ptr_purchase_manager.get_saves_path() / str_file_name;
+
+	std::cout << "\nAttempting to save all user purchases report...\n";
+
+	try {
+		_ptr_class_container.ptr_purchase_manager.ensure_save_directory_exists();
+		double d_all_purchase_total = 0;
+		std::ofstream of_stream(path_file_to_write);
+
+		of_stream.imbue(std::locale("en_GB"));
+		of_stream << "Report generated at: " << std::put_time(&tm_current_datetime, "%c") << "\n";
+		of_stream << "Report generated by: " << _ptr_class_container.ptr_user_manager.get_current_user().get_email() << "\n\n";
+
+		of_stream << "All user purchases summary\n";
+		of_stream << "This summary shows each user and if they have made any purchases displays each purchase with a calculated total.\nSee the end of the report for a grand total/average\n";
+
+		util::for_each_iterator(_vec_users.begin(), _vec_users.end(), 0, [&](int index, User& user) {
+			of_stream << "\nSummary for user: " << user.get_email() << "\n\n";
+			_ptr_class_container.ptr_purchase_manager.fetch_purchases(user);
+			std::vector<Purchase>& vec_user_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
+
+			if (vec_user_purchases.size() > 0) {
+				of_stream << "Purchases: \n";
+				for (Purchase& purchase : vec_user_purchases) {
+					of_stream.precision(2);
+					of_stream <<
+						std::fixed <<
+						std::setw(6) << std::left << "Date: " <<
+						std::setw(25) << std::left << purchase.get_date() <<
+						std::setw(7) << std::left << "Total: " <<
+						std::setw(15) << std::left << purchase.get_total() << "\n";
+				}
+
+				of_stream.precision(2);
+				of_stream <<
+					std::fixed <<
+					std::setw(23) << std::left << "\nUser purchases total: " <<
+					std::setw(15) << std::left << _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total() <<
+					std::setw(27) << std::left << "User purchases average: " <<
+					std::setw(15) << std::left << _ptr_class_container.ptr_purchase_manager.get_purchase_average() << "\n";
+
+				d_all_purchase_total = d_all_purchase_total + _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total();
+			}
+			else {
+				of_stream << "This user has not yet made any purchases\n";
+			}
+			of_stream << "__________________________________________________________________________________________\n";
+			});
+
+		of_stream << "\nAll purchases total: " << d_all_purchase_total << "\n";
+		of_stream << "All purchases average: " << d_all_purchase_total / _vec_users.size() << "\n";
+
+		of_stream << "\nNOTE: The above average assumes that for users who have made no purchases the total of their purchases is zero.\n";
+
+		of_stream.close();
+
+		std::cout << "All user purchases report saved as " << str_file_name << "\n";
+		std::cout << "NOTE: The location for this save is in the saves directory where the GameStock.exe was run from\n\n";
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void ViewUserPurchasesSaveMenu::execute() {
+	std::tm tm_current_datetime = util::get_current_datetime();
+	std::string str_current_datetime = util::tm_to_filesafe_str(tm_current_datetime);
+	std::string str_file_name = "UserPurchasesReport_" + str_current_datetime + ".txt";
+	std::filesystem::path path_file_to_write = _ptr_class_container.ptr_purchase_manager.get_saves_path() / str_file_name;
+
+	std::cout << "\nAttempting to save user purchases report...\n";
+
+	try {
+		_ptr_class_container.ptr_purchase_manager.ensure_save_directory_exists();
+		std::vector<Purchase>& vec_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
+		std::ofstream of_stream(path_file_to_write);
+
+		of_stream.imbue(std::locale("en_GB"));
+		of_stream << "Report generated at: " << std::put_time(&tm_current_datetime, "%c") << "\n";
+		of_stream << "Report generated by: " << _ptr_class_container.ptr_user_manager.get_current_user().get_email() << "\n\n";
+
+		of_stream << "Purchase summary for: " << _obj_user.get_email() << "\n";
+		of_stream << "\nBelow is a summary of each purchase made, the items in the purchase, total of the individual purchase, purchase total, game copies total and a grand total at the end.\n";
+
+		util::for_each_iterator(vec_purchases.begin(), vec_purchases.end(), 0, [&](int index, Purchase& purchase) {
+			of_stream << "\n";
+			of_stream << "Purchase date: " << purchase.get_date() << "\n";
+
+			util::output_purchase_item_header(of_stream);
+			for (PurchaseItem& purchase_item : purchase.get_vec_purchase_items()) {
+				util::output_purchase_item(purchase_item, of_stream);
+			}
+
+			of_stream << "\n";
+			of_stream.precision(2);
+			of_stream <<
+				std::fixed <<
+				std::setw(16) << std::left << "Purchase total: " <<
+				std::setw(15) << std::left << purchase.get_total() <<
+				std::setw(19) << std::left << "Total Game copies: " <<
+				std::setw(10) << std::left << purchase.get_total_game_copies() << "\n";
+			of_stream << "_______________________________________________________________________________________________________\n";
+			});
+
+		of_stream << std::setprecision(2) << std::fixed << "\nPurchases grand total: " << _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total() << "\n";
+		of_stream << std::setprecision(2) << std::fixed << "Purchases grand total (Before VAT): " << _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total() * 0.8 << "\n";
+		of_stream << std::setprecision(2) << std::fixed << "Average purchase total: " << _ptr_class_container.ptr_purchase_manager.get_purchase_average() << "\n";
+		of_stream << std::setprecision(2) << std::fixed << "Total game copies: " << _ptr_class_container.ptr_purchase_manager.get_total_game_copies() << "\n";
+
+		of_stream.close();
+
+		std::cout << "User purchases report saved as " << str_file_name << "\n";
+		std::cout << "NOTE: The location for this save is in the saves directory where the GameStock.exe was run from\n\n";
+		util::pause();
+	}
+	catch (std::exception& ex) {
+		std::cout << "Error: " << ex.what() << "\n";
+		util::pause();
+	}
+}
+
+void ViewUserPurchaseItemsSaveMenu::execute() {
+	std::tm tm_current_datetime = util::get_current_datetime();
+	std::string str_current_datetime = util::tm_to_filesafe_str(tm_current_datetime);
+	std::string str_file_name = "PurchaseReport_" + str_current_datetime + ".txt";
+	std::filesystem::path path_file_to_write = _ptr_class_container.ptr_purchase_manager.get_saves_path() / str_file_name;
+
+	std::cout << "\nAttempting to save purchase items report...\n";
+
+	try {
+		_ptr_class_container.ptr_purchase_manager.ensure_save_directory_exists();
+		std::vector<PurchaseItem>& vec_purchase_items = _obj_purchase.get_vec_purchase_items();
+		std::ofstream of_stream(path_file_to_write);
+
+		of_stream.imbue(std::locale("en_GB"));
+		of_stream << "Report generated at: " << std::put_time(&tm_current_datetime, "%c") << "\n";
+		of_stream << "Report generated by: " << _ptr_class_container.ptr_user_manager.get_current_user().get_email() << "\n\n";
+		of_stream << "Summary of purchase placed on: " << _obj_purchase.get_date() << "\n";
+
+		util::output_purchase_item_header(of_stream);
+		util::for_each_iterator(vec_purchase_items.begin(), vec_purchase_items.end(), 0, [&](int index, PurchaseItem& item) {
+			util::output_purchase_item(item, of_stream);
+			});
+
+		of_stream << "\n";
+		of_stream.precision(2);
+		of_stream <<
+			std::fixed <<
+			std::setw(16) << std::left << "Purchase total: " <<
+			std::setw(15) << std::left << _obj_purchase.get_total() <<
+			std::setw(19) << std::left << "Total Game copies: " <<
+			std::setw(10) << std::left << _obj_purchase.get_total_game_copies() << "\n";
+
+		of_stream.close();
+
+		std::cout << "Purchase Items report saved as " << str_file_name << "\n";
+		std::cout << "NOTE: The location for this save is in the saves directory where the GameStock.exe was run from\n\n";
+		util::pause();
 	}
 	catch (std::exception& ex) {
 		std::cout << "Error: " << ex.what() << "\n";

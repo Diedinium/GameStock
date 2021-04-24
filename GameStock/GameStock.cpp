@@ -39,6 +39,8 @@ int main()
 	objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new LoginMenu("Login", class_container)));
 	objMenuContainer.add_menu_item(std::unique_ptr<MenuItem>(new RegisterMenu("Register", class_container)));
 
+	std::cout.imbue(std::locale("en_GB.utf8"));
+
 	while (!objMenuContainer.get_exit_menu()) {
 		system("cls");
 		objMenuContainer.execute();

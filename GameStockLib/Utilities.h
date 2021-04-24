@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <conio.h>
 #include <vector>
+#include <chrono>
+#include <fstream>
 #include "Game.h"
 #include "Purchase.h"
 #include "PurchaseItem.h"
@@ -102,13 +104,13 @@ namespace util {
 	/// <summary>
 	/// Outputs the header for displaying the user table
 	/// </summary>
-	void output_users_header();
+	void output_users_header(bool display_admin_status = true);
 
 	/// <summary>
 	/// Outputs an individual user for the user table
 	/// </summary>
 	/// <param name="obj_user"></param>
-	void output_user(User& obj_user);
+	void output_user(User& obj_user, bool display_admin_status = true);
 
 	/// <summary>
 	/// Outputs the header for displaying the purchase table
@@ -125,13 +127,31 @@ namespace util {
 	/// Outputs the header for displaying the purchase item/details table
 	/// </summary>
 	void output_purchase_item_header();
+	void output_purchase_item_header(std::ofstream& of_stream);
 
 	/// <summary>
 	/// Outputs an individual purchase item (row) for the purchase item/detail table
 	/// </summary>
 	/// <param name="obj_purchase_item"></param>
 	void output_purchase_item(PurchaseItem& obj_purchase_item);
+	void output_purchase_item(PurchaseItem& obj_purchase_item, std::ofstream& of_stream);
 
+	/// <summary>
+	/// Get the current (system) datetime as the std::tm struct
+	/// </summary>
+	/// <returns></returns>
+	std::tm get_current_datetime();
+
+	/// <summary>
+	/// Convert the provided std::tm to a file safe string format
+	/// </summary>
+	/// <param name="tm"></param>
+	/// <returns></returns>
+	std::string tm_to_filesafe_str(std::tm& tm);
+
+	/// <summary>
+	/// Used to stop console output until user presses any key
+	/// </summary>
 	void pause();
 }
 

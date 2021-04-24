@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <numeric>
 #include "PurchaseItem.h"
 
 class Purchase
@@ -29,5 +30,7 @@ public:
 
 	std::string get_date() { return _str_date; }
 	void set_date(std::string str_date) { _str_date = str_date; }
+
+	int get_total_game_copies();
 };
 

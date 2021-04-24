@@ -52,3 +52,25 @@ void PurchaseManager::populate_purchase_details(Purchase& obj_purchase) {
 
 	sqlite3_finalize(stmt_fetch_purchase_items);
 }
+
+double PurchaseManager::get_purchase_grand_total() {
+	return std::accumulate(_vec_purchases.begin(),	_vec_purchases.end(), 0.0, [&](double total, Purchase& purchase) {
+		return total + purchase.get_total();
+	});
+}
+
+double PurchaseManager::get_purchase_average() {
+	return get_purchase_grand_total() / (double)_vec_purchases.size();
+}
+
+int PurchaseManager::get_total_game_copies() {
+	return std::accumulate(_vec_purchases.begin(), _vec_purchases.end(), 0, [&](int total, Purchase& purchase) {
+		return total + purchase.get_total_game_copies();
+	});
+}
+
+void PurchaseManager::ensure_save_directory_exists() {
+	if (!std::filesystem::exists(_saves_path)) {
+		std::filesystem::create_directory(_saves_path);
+	}
+}

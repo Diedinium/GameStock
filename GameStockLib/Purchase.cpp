@@ -25,3 +25,9 @@ Purchase::Purchase(int i_id, int i_user_id, std::vector<PurchaseItem> vec_purcha
 	_vec_purchase_items = vec_purchase_items;
 	_str_date = str_date;
 }
+
+int Purchase::get_total_game_copies() {
+	return std::accumulate(_vec_purchase_items.begin(), _vec_purchase_items.end(), 0, [](int total, PurchaseItem& purchase_item) {
+		return total + purchase_item.get_count();
+	});
+}

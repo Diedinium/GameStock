@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <iomanip>
+#include <fstream>
 #include <Windows.h>
 #include "Utilities.h"
 #include "InputValidator.h"
@@ -314,6 +316,38 @@ protected:
     Purchase& _obj_purchase;
 public:
     ViewUserPurchaseItemsMenu(std::string output, ClassContainer& ptr_class_container, Purchase& obj_purchase) : GeneralMenuItem(output, ptr_class_container), _obj_purchase(obj_purchase) {};
+    void execute();
+};
+
+class AllUserPurchaseSummaryMenu : public GeneralMenuItem {
+protected:
+    std::vector<User>& _vec_users;
+public:
+    AllUserPurchaseSummaryMenu(std::string output, ClassContainer& ptr_class_container, std::vector<User>& vec_users) : GeneralMenuItem(output, ptr_class_container), _vec_users(vec_users) {};
+    void execute();
+};
+
+class ViewUserPurchasesSummaryMenu : public ViewUserPurchasesMenu {
+public:
+    ViewUserPurchasesSummaryMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ViewUserPurchasesMenu(output, ptr_class_container, obj_user) {};
+    void execute();
+};
+
+class AllUserPurchaseSaveMenu : public AllUserPurchaseSummaryMenu {
+public:
+    AllUserPurchaseSaveMenu(std::string output, ClassContainer& ptr_class_container, std::vector<User>& vec_users) : AllUserPurchaseSummaryMenu(output, ptr_class_container, vec_users) {};
+    void execute();
+};
+
+class ViewUserPurchasesSaveMenu : public ViewUserPurchasesMenu {
+public:
+    ViewUserPurchasesSaveMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ViewUserPurchasesMenu(output, ptr_class_container, obj_user) {};
+    void execute();
+};
+
+class ViewUserPurchaseItemsSaveMenu : public ViewUserPurchaseItemsMenu {
+public:
+    ViewUserPurchaseItemsSaveMenu(std::string output, ClassContainer& ptr_class_container, Purchase& obj_purchase) : ViewUserPurchaseItemsMenu(output, ptr_class_container, obj_purchase) {};
     void execute();
 };
 
