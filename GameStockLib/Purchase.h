@@ -15,7 +15,7 @@ public:
 	Purchase();
 	Purchase(int i_id, double d_total, std::string str_date);
 	Purchase(int i_user_id, std::vector<PurchaseItem> vec_purchase_items);
-	Purchase(int i_id, int i_user_id, std::vector<PurchaseItem> vec_purchase_items, std::string str_date);
+	Purchase(int i_id, int i_user_id, std::vector<PurchaseItem> vec_purchase_items, double d_total, std::string str_date);
 
 	int get_id() { return _i_id; }
 	void set_id(int i_id) { _i_id = i_id; }

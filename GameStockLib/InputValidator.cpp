@@ -3,7 +3,6 @@
 bool validate::get_control_char(KEY_EVENT_RECORD& keyRec, HANDLE& hConsole) {
 	DWORD cc;
 	INPUT_RECORD irec;
-	std::vector<WORD> vec_valid_key_events = get_valid_key_events();
 
 	if (hConsole == NULL)
 	{
@@ -17,7 +16,7 @@ bool validate::get_control_char(KEY_EVENT_RECORD& keyRec, HANDLE& hConsole) {
 		{
 			keyRec = (KEY_EVENT_RECORD&)irec.Event;
 
-			for (auto& key_event : vec_valid_key_events)
+			for (auto& key_event : VEC_VALID_KEY_EVENTS)
 			{
 				if (keyRec.wVirtualKeyCode == key_event) return true;
 			}
@@ -26,19 +25,6 @@ bool validate::get_control_char(KEY_EVENT_RECORD& keyRec, HANDLE& hConsole) {
 		}
 	}
 	return false;
-}
-
-std::vector<WORD> validate::get_valid_key_events() {
-	std::vector<WORD> vec_valid_key_events;
-	vec_valid_key_events.push_back(VK_UP);
-	vec_valid_key_events.push_back(VK_DOWN);
-	vec_valid_key_events.push_back(VK_LEFT);
-	vec_valid_key_events.push_back(VK_RIGHT);
-	vec_valid_key_events.push_back(VK_RETURN);
-	vec_valid_key_events.push_back(VK_ESCAPE);
-	vec_valid_key_events.push_back(VK_F1);
-	vec_valid_key_events.push_back(VK_F2);
-	return vec_valid_key_events;
 }
 
 std::string validate::validate_string() {

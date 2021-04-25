@@ -8,18 +8,17 @@
 
 namespace validate {
 	/// <summary>
+	/// Stores all allowed key inputs
+	/// </summary>
+	const std::vector<WORD> VEC_VALID_KEY_EVENTS = { VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, VK_RETURN, VK_ESCAPE, VK_F1, VK_F2 };
+
+	/// <summary>
 	/// Gets the key input from user (records next pressed key as KEY_EVENT_RECORD)
 	/// </summary>
 	/// <param name="keyRec"></param>
 	/// <param name="hConsole"></param>
 	/// <returns></returns>
 	bool get_control_char(KEY_EVENT_RECORD& keyRec, HANDLE& hConsole);
-
-	/// <summary>
-	/// Returns the valid key event options for normal menu situations.
-	/// </summary>
-	/// <returns></returns>
-	std::vector<WORD> get_valid_key_events();
 
 	/// <summary>
 	/// Gets user input as a string - doesn't really do any "validation" as any entry can be a valid string.

@@ -58,12 +58,6 @@ GeneralMenuItem::GeneralMenuItem(std::string output, ClassContainer& ptr_class_c
 	_output = output;
 };
 
-void DummyMenu::execute() {
-	system("cls");
-	std::cout << "Dummy menu option was entered...\n";
-	util::pause();
-}
-
 void LoginMenu::execute() {
 	User obj_user;
 	system("cls");

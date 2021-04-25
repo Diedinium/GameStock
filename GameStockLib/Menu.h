@@ -47,12 +47,6 @@ public:
     std::string item_text() const { return _output; }
 };
 
-class DummyMenu : public GeneralMenuItem {
-public:
-    DummyMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
-    void execute();
-};
-
 /// <summary>
 /// Allows a user to attempt to login to the system.
 /// </summary>
