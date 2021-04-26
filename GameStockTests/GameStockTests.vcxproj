@@ -160,10 +160,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GameManagerTests.cpp" />
     <ClCompile Include="PurchaseItemTests.cpp" />
     <ClCompile Include="DatabaseManagerTests.cpp" />
     <ClCompile Include="GameTests.cpp" />
     <ClCompile Include="GenreTests.cpp" />
+    <ClCompile Include="PurchaseManagerTests.cpp" />
     <ClCompile Include="PurchaseTests.cpp" />
     <ClCompile Include="RatingTests.cpp" />
     <ClCompile Include="TestUtilities.cpp" />

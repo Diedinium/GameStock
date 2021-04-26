@@ -88,6 +88,7 @@ void UserManager::update_user_password(User& obj_user) {
 	sqlite3_bind_int(stmt_update_user_password, 2, obj_user.get_id());
 
 	if (sqlite3_step(stmt_update_user_password) != SQLITE_DONE) {
+		sqlite3_finalize(stmt_update_user_password);
 		throw std::runtime_error("Something went wrong while updating password, please try again.");
 	}
 
@@ -108,6 +109,7 @@ void UserManager::update_user_age(User& obj_user) {
 	sqlite3_bind_int(stmt_update_user_age, 2, obj_user.get_id());
 
 	if (sqlite3_step(stmt_update_user_age) != SQLITE_DONE) {
+		sqlite3_finalize(stmt_update_user_age);
 		throw std::runtime_error("Something went wrong while updating age, please try again.");
 	}
 
@@ -128,6 +130,7 @@ void UserManager::update_user_fullname(User& obj_user) {
 	sqlite3_bind_int(stmt_update_user_name, 2, obj_user.get_id());
 
 	if (sqlite3_step(stmt_update_user_name) != SQLITE_DONE) {
+		sqlite3_finalize(stmt_update_user_name);
 		throw std::runtime_error("Something went wrong while updating full name, please try again.");
 	}
 
@@ -148,6 +151,7 @@ void UserManager::update_user_email(User& obj_user) {
 	sqlite3_bind_int(stmt_update_user_email, 2, obj_user.get_id());
 
 	if (sqlite3_step(stmt_update_user_email) != SQLITE_DONE) {
+		sqlite3_finalize(stmt_update_user_email);
 		throw std::runtime_error("Something went wrong while updating email (Most likely, a matching email conflict), please try again.");
 	}
 
@@ -168,6 +172,7 @@ void UserManager::change_user_admin_status(User& obj_user) {
 	sqlite3_bind_int(stmt_update_user_admin_status, 2, obj_user.get_id());
 
 	if (sqlite3_step(stmt_update_user_admin_status) != SQLITE_DONE) {
+		sqlite3_finalize(stmt_update_user_admin_status);
 		throw std::runtime_error("Something went wrong while updating admin status, please try again.");
 	}
 

@@ -13,7 +13,6 @@ class PurchaseManager
 	sqlite3* _db;
 
 	std::vector<Purchase> _vec_purchases;
-	Purchase _obj_purchase_details;
 	std::filesystem::path _saves_path = std::filesystem::path(L"saves");
 public:
 	PurchaseManager(sqlite3* db) { _db = db; }
