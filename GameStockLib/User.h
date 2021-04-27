@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 
+/// <summary>
+/// Class used to store and represent a user.
+/// </summary>
 class User
 {
 	int _i_id;

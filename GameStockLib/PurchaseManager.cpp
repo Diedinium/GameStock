@@ -1,9 +1,11 @@
 #include "PurchaseManager.h"
 
 void PurchaseManager::fetch_purchases(User& obj_user) {
+	// Clear any previous purchases first
 	_vec_purchases.clear();
 	sqlite3_stmt* stmt_fetch_purchases;
 
+	// Fetch all purchases of user and order by datetime of purchase
 	std::string str_fetch_purchases = "SELECT id, total, date FROM purchases WHERE user_id = ? ORDER BY datetime(date) DESC";
 
 	if (sqlite3_prepare_v2(_db, str_fetch_purchases.c_str(), -1, &stmt_fetch_purchases, NULL) != SQLITE_OK) {
@@ -25,9 +27,11 @@ void PurchaseManager::fetch_purchases(User& obj_user) {
 }
 
 void PurchaseManager::populate_purchase_details(Purchase& obj_purchase) {
+	// Clear any previously populatd purchase details first
 	obj_purchase.get_vec_purchase_items().clear();
 	sqlite3_stmt* stmt_fetch_purchase_items;
 
+	// Select all purchases that are related to the provided purchase id
 	std::string str_fetch_purchase_items = "SELECT id, game_name, game_price, game_genre, game_rating, count, total FROM purchase_items WHERE purchase_id = ?";
 
 	if (sqlite3_prepare_v2(_db, str_fetch_purchase_items.c_str(), -1, &stmt_fetch_purchase_items, NULL) != SQLITE_OK) {
@@ -54,22 +58,26 @@ void PurchaseManager::populate_purchase_details(Purchase& obj_purchase) {
 }
 
 double PurchaseManager::get_purchase_grand_total() {
+	// Sum the totals of all purchases and return
 	return std::accumulate(_vec_purchases.begin(),	_vec_purchases.end(), 0.0, [&](double total, Purchase& purchase) {
 		return total + purchase.get_total();
 	});
 }
 
 double PurchaseManager::get_purchase_average() {
+	// Calculate average by getting total and then dividing by the number of purchases
 	return get_purchase_grand_total() / (double)_vec_purchases.size();
 }
 
 int PurchaseManager::get_total_game_copies() {
+	// Sum the total game copies of all purchases (only works properly when all purchases have thier purchase details/items popualted)
 	return std::accumulate(_vec_purchases.begin(), _vec_purchases.end(), 0, [&](int total, Purchase& purchase) {
 		return total + purchase.get_total_game_copies();
 	});
 }
 
 void PurchaseManager::ensure_save_directory_exists() {
+	// Create save directory if it does not already exist
 	if (!std::filesystem::exists(_saves_path)) {
 		std::filesystem::create_directory(_saves_path);
 	}

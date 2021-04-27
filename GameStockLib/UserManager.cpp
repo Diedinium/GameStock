@@ -9,6 +9,7 @@ void UserManager::register_user(User& obj_user) {
 	char* errorMessage;
 	int i_return_code;
 
+	// Build user insert string
 	std::string str_user_insert = "INSERT INTO users (name, age, email, password) VALUES ('" + 
 		obj_user.get_full_name() + "', " + 
 		std::to_string(obj_user.get_age()) + ", '" + 
@@ -17,6 +18,7 @@ void UserManager::register_user(User& obj_user) {
 
 	i_return_code = sqlite3_exec(_db, str_user_insert.c_str(), NULL, NULL, &errorMessage);
 
+	// Throw error if insert is not ok
 	if (i_return_code != SQLITE_OK) {
 		throw std::invalid_argument(errorMessage);
 	}
@@ -26,16 +28,19 @@ void UserManager::attempt_login(User& obj_user) {
 	int i_return_code;
 	sqlite3_stmt* stmt_user_query;
 
+	// Build user login attempt string
 	std::string str_find_user_sql = "SELECT * FROM users WHERE email = '" + obj_user.get_email() + "' AND password = '" + obj_user.get_password() + "'";
 
 	sqlite3_prepare_v2(_db, str_find_user_sql.c_str(), -1, &stmt_user_query, NULL);
 	i_return_code = sqlite3_step(stmt_user_query);
 
+	// Throw if no matching user could be found
 	if (i_return_code != SQLITE_ROW) {
 		sqlite3_finalize(stmt_user_query);
 		throw std::invalid_argument("No matching user could be found with the provided details.");
 	}
 
+	// Populate current user if we get this far, assuming found user matches provided details
 	obj_user.set_full_name((char*)sqlite3_column_text(stmt_user_query, 1));
 	obj_user.set_age(sqlite3_column_int(stmt_user_query, 2));
 	obj_user.set_is_admin(sqlite3_column_int(stmt_user_query, 5));
@@ -56,6 +61,7 @@ void UserManager::fetch_users(bool no_admins) {
 	_vec_users.clear();
 	sqlite3_stmt* stmt_fetch_users;
 
+	// Select all users and order, do not include admins if no_admins is true
 	std::string str_sql = "SELECT * FROM users ORDER BY email";
 
 	if (no_admins) str_sql = "SELECT * FROM users WHERE is_admin = 0 ORDER BY email";
@@ -76,6 +82,7 @@ void UserManager::fetch_users(bool no_admins) {
 
 void UserManager::update_user_password(User& obj_user) {
 	sqlite3_stmt* stmt_update_user_password;
+	// Update a user's password based on the provided user id
 	std::string str_update_user_password = "UPDATE users SET password = ? WHERE id = ?";
 
 	if (sqlite3_prepare_v2(_db, str_update_user_password.c_str(), -1, &stmt_update_user_password, NULL) != SQLITE_OK) {
@@ -87,6 +94,7 @@ void UserManager::update_user_password(User& obj_user) {
 	sqlite3_bind_text(stmt_update_user_password, 1, obj_user.get_password().c_str(), -1, SQLITE_TRANSIENT);
 	sqlite3_bind_int(stmt_update_user_password, 2, obj_user.get_id());
 
+	// Throw if unexpected result code from update
 	if (sqlite3_step(stmt_update_user_password) != SQLITE_DONE) {
 		sqlite3_finalize(stmt_update_user_password);
 		throw std::runtime_error("Something went wrong while updating password, please try again.");
@@ -97,6 +105,7 @@ void UserManager::update_user_password(User& obj_user) {
 
 void UserManager::update_user_age(User& obj_user) {
 	sqlite3_stmt* stmt_update_user_age;
+	// Update user's age based on provided user Id
 	std::string str_update_user_age = "UPDATE users SET age = ? WHERE id = ?";
 
 	if (sqlite3_prepare_v2(_db, str_update_user_age.c_str(), -1, &stmt_update_user_age, NULL) != SQLITE_OK) {
@@ -108,6 +117,7 @@ void UserManager::update_user_age(User& obj_user) {
 	sqlite3_bind_int(stmt_update_user_age, 1, obj_user.get_age());
 	sqlite3_bind_int(stmt_update_user_age, 2, obj_user.get_id());
 
+	// Throw if unexpected result code from update
 	if (sqlite3_step(stmt_update_user_age) != SQLITE_DONE) {
 		sqlite3_finalize(stmt_update_user_age);
 		throw std::runtime_error("Something went wrong while updating age, please try again.");
@@ -118,6 +128,7 @@ void UserManager::update_user_age(User& obj_user) {
 
 void UserManager::update_user_fullname(User& obj_user) {
 	sqlite3_stmt* stmt_update_user_name;
+	// Update user's full name based on provided user id
 	std::string str_update_user_name = "UPDATE users SET name = ? WHERE id = ?";
 
 	if (sqlite3_prepare_v2(_db, str_update_user_name.c_str(), -1, &stmt_update_user_name, NULL) != SQLITE_OK) {
@@ -129,6 +140,7 @@ void UserManager::update_user_fullname(User& obj_user) {
 	sqlite3_bind_text(stmt_update_user_name, 1, obj_user.get_full_name().c_str(), -1, SQLITE_TRANSIENT);
 	sqlite3_bind_int(stmt_update_user_name, 2, obj_user.get_id());
 
+	// Throw if unexpected result code from update
 	if (sqlite3_step(stmt_update_user_name) != SQLITE_DONE) {
 		sqlite3_finalize(stmt_update_user_name);
 		throw std::runtime_error("Something went wrong while updating full name, please try again.");
@@ -139,6 +151,7 @@ void UserManager::update_user_fullname(User& obj_user) {
 
 void UserManager::update_user_email(User& obj_user) {
 	sqlite3_stmt* stmt_update_user_email;
+	// Update user's email based on the provided Id
 	std::string str_update_user_email = "UPDATE users SET email = ? WHERE id = ?";
 
 	if (sqlite3_prepare_v2(_db, str_update_user_email.c_str(), -1, &stmt_update_user_email, NULL) != SQLITE_OK) {
@@ -150,6 +163,7 @@ void UserManager::update_user_email(User& obj_user) {
 	sqlite3_bind_text(stmt_update_user_email, 1, obj_user.get_email().c_str(), -1, SQLITE_TRANSIENT);
 	sqlite3_bind_int(stmt_update_user_email, 2, obj_user.get_id());
 
+	// Throw if unexpected result code from update
 	if (sqlite3_step(stmt_update_user_email) != SQLITE_DONE) {
 		sqlite3_finalize(stmt_update_user_email);
 		throw std::runtime_error("Something went wrong while updating email (Most likely, a matching email conflict), please try again.");
@@ -160,6 +174,7 @@ void UserManager::update_user_email(User& obj_user) {
 
 void UserManager::change_user_admin_status(User& obj_user) {
 	sqlite3_stmt* stmt_update_user_admin_status;
+	// Update admin status based on provided user id
 	std::string str_update_user_admin_status = "UPDATE users SET is_admin = ? WHERE id = ?";
 
 	if (sqlite3_prepare_v2(_db, str_update_user_admin_status.c_str(), -1, &stmt_update_user_admin_status, NULL) != SQLITE_OK) {
@@ -171,6 +186,7 @@ void UserManager::change_user_admin_status(User& obj_user) {
 	sqlite3_bind_int(stmt_update_user_admin_status, 1, obj_user.get_is_admin() ? 1 : 0);
 	sqlite3_bind_int(stmt_update_user_admin_status, 2, obj_user.get_id());
 
+	// Throw if unexpected result code from update
 	if (sqlite3_step(stmt_update_user_admin_status) != SQLITE_DONE) {
 		sqlite3_finalize(stmt_update_user_admin_status);
 		throw std::runtime_error("Something went wrong while updating admin status, please try again.");

@@ -4,6 +4,9 @@
 #include <numeric>
 #include "PurchaseItem.h"
 
+/// <summary>
+/// Class used to represent and store details for a purchase. Not that this class is also used as an object to store basket items
+/// </summary>
 class Purchase
 {
 	int _i_id;
@@ -31,6 +34,10 @@ public:
 	std::string get_date() { return _str_date; }
 	void set_date(std::string str_date) { _str_date = str_date; }
 
+	/// <summary>
+	/// Counts the number of game copies that are present across all of the purcahse items in get_vec_purchase_items
+	/// </summary>
+	/// <returns></returns>
 	int get_total_game_copies();
 };
 

@@ -13,6 +13,9 @@
 #include "ClassContainer.h"
 #include "Game.h"
 
+/// <summary>
+/// Base virtual class for menu items
+/// </summary>
 class MenuItem {
 public:
     virtual ~MenuItem() {}
@@ -20,6 +23,9 @@ public:
     virtual void execute() = 0;
 };
 
+/// <summary>
+/// Menu container which makes use of a list of MenuItems to display them upon execution
+/// </summary>
 class MenuContainer {
 private:
     std::string _str_text;
@@ -37,6 +43,9 @@ public:
     void set_menu_text(std::string str_text) { _str_text = str_text; }
 };
 
+/// <summary>
+/// Implements the common menu functionality, inherited from by other classes which then implement the execute function
+/// </summary>
 class GeneralMenuItem : public MenuItem {
 private:
     std::string _output;
@@ -291,12 +300,18 @@ public:
     void execute();
 };
 
+/// <summary>
+/// Allows an admin to select a user's purchase history to view.
+/// </summary>
 class SelectUserPurchasesViewMenu : public GeneralMenuItem {
 public:
     SelectUserPurchasesViewMenu(std::string output, ClassContainer& ptr_class_container) : GeneralMenuItem(output, ptr_class_container) {};
     void execute();
 };
 
+/// <summary>
+/// Allows a user or admin to view the purchase history specific to a user (in the case of users it's limited to only their own)
+/// </summary>
 class ViewUserPurchasesMenu : public GeneralMenuItem {
 protected:
     User& _obj_user;
@@ -305,6 +320,9 @@ public:
     void execute();
 };
 
+/// <summary>
+/// Allows an admin/user to view the purchase items that make up a purchase
+/// </summary>
 class ViewUserPurchaseItemsMenu : public GeneralMenuItem {
 protected:
     Purchase& _obj_purchase;
@@ -313,6 +331,9 @@ public:
     void execute();
 };
 
+/// <summary>
+/// Produces a summary of purchases made by all users
+/// </summary>
 class AllUserPurchaseSummaryMenu : public GeneralMenuItem {
 protected:
     std::vector<User>& _vec_users;
@@ -321,24 +342,36 @@ public:
     void execute();
 };
 
+/// <summary>
+/// Produces a summary of purchases made by a particular user
+/// </summary>
 class ViewUserPurchasesSummaryMenu : public ViewUserPurchasesMenu {
 public:
     ViewUserPurchasesSummaryMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ViewUserPurchasesMenu(output, ptr_class_container, obj_user) {};
     void execute();
 };
 
+/// <summary>
+/// Saves a all user purchase summary to a txt file
+/// </summary>
 class AllUserPurchaseSaveMenu : public AllUserPurchaseSummaryMenu {
 public:
     AllUserPurchaseSaveMenu(std::string output, ClassContainer& ptr_class_container, std::vector<User>& vec_users) : AllUserPurchaseSummaryMenu(output, ptr_class_container, vec_users) {};
     void execute();
 };
 
+/// <summary>
+/// Saves a users purchases summary to a txt file
+/// </summary>
 class ViewUserPurchasesSaveMenu : public ViewUserPurchasesMenu {
 public:
     ViewUserPurchasesSaveMenu(std::string output, ClassContainer& ptr_class_container, User& obj_user) : ViewUserPurchasesMenu(output, ptr_class_container, obj_user) {};
     void execute();
 };
 
+/// <summary>
+/// Saves a purchase purchase items summary to a txt file
+/// </summary>
 class ViewUserPurchaseItemsSaveMenu : public ViewUserPurchaseItemsMenu {
 public:
     ViewUserPurchaseItemsSaveMenu(std::string output, ClassContainer& ptr_class_container, Purchase& obj_purchase) : ViewUserPurchaseItemsMenu(output, ptr_class_container, obj_purchase) {};

@@ -121,6 +121,7 @@ void util::output_purchase_item(PurchaseItem& obj_purchase_item, std::ofstream& 
 }
 
 std::tm util::get_current_datetime() {
+	// Get current time and convert it into tm and return
 	std::time_t date = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 	struct std::tm tm;
 	localtime_s(&tm, &date);
@@ -128,6 +129,7 @@ std::tm util::get_current_datetime() {
 }
 
 std::string util::tm_to_filesafe_str(std::tm& tm) {
+	// Convert a provided tm to a file safe string
 	std::stringstream ssBuffer;
 	ssBuffer << std::put_time(&tm, "%F_%I-%M-%S_%p");
 	return ssBuffer.str();

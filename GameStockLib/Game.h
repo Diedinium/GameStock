@@ -3,6 +3,9 @@
 #include "Genre.h"
 #include "Rating.h"
 
+/// <summary>
+/// Class that is used to represent a game.
+/// </summary>
 class Game
 {
 	int _i_id;

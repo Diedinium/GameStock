@@ -41,6 +41,7 @@ PurchaseItem::PurchaseItem(int i_id, std::string str_game_name, double d_game_pr
 
 void PurchaseItem::set_count(int i_count)
 {
+	// Recalculate total on set as well
 	_i_count = i_count; 
 	_d_total = (double)_i_count * _d_price;
 }

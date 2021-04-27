@@ -12,9 +12,11 @@ void MenuContainer::execute()
 {
 	KEY_EVENT_RECORD key{};
 
+	// Only exit when menu option selected
 	while (key.wVirtualKeyCode != VK_RETURN) {
 		system("cls");
 		std::cout << _str_text << "\n";
+		// Display menu options
 		util::for_each_iterator(_vec_menu_items.begin(), _vec_menu_items.end(), 0, [&](int index, std::unique_ptr<MenuItem> const& item) {
 			if (_i_highlighted_index == index) {
 				SetConsoleTextAttribute(_h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
@@ -26,6 +28,8 @@ void MenuContainer::execute()
 			}
 			});
 		while (!validate::get_control_char(key, _h_input_console));
+
+		// Determine action to take based on user input
 		if (key.wVirtualKeyCode == VK_DOWN) {
 			if (_i_highlighted_index < (int)_vec_menu_items.size() - 1) _i_highlighted_index++;
 		}
@@ -38,6 +42,7 @@ void MenuContainer::execute()
 		}
 	}
 
+	// Execute the selected menu option
 	if ((int)_vec_menu_items.size() - 1 >= _i_highlighted_index && _i_highlighted_index >= 0) {
 		if (key.wVirtualKeyCode != VK_ESCAPE) {
 			_vec_menu_items[_i_highlighted_index]->execute();
@@ -63,22 +68,19 @@ void LoginMenu::execute() {
 	system("cls");
 	std::cout << "Follow the prompts to login to GameStock.\n\n";
 
-	/*std::cout << "Please enter your email: ";
-	obj_user.set_email(validate::validate_string());
+	// Get user to enter details
+	std::cout << "Please enter your email: ";
+	obj_user.set_email(validate::validate_string(0, 45));
 
 	std::cout << "Please enter your password: ";
-	obj_user.set_password(validate::validate_string());*/
-
-	//obj_user.set_email("admin@gamestock.com");
-	//obj_user.set_password("somesecureadminpassword");
-
-	obj_user.set_email("email@email.com");
-	obj_user.set_password("password");
+	obj_user.set_password(validate::validate_string(7));
 
 	try {
+		// Attempt to login with provided details
 		_ptr_class_container.ptr_user_manager.attempt_login(obj_user);
 		bool bool_user_is_admin = _ptr_class_container.ptr_user_manager.get_current_user().get_is_admin();
 
+		// Display differnet menu options based on if user is an admin or not
 		MenuContainer obj_menu_container = MenuContainer("Logged in as " + obj_user.get_email() + ".\nChoose one of the below options.\n(Esc to logout)\n");
 		if (bool_user_is_admin) {
 			obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new ViewGamesMenu("Manage games", _ptr_class_container)));
@@ -101,6 +103,7 @@ void LoginMenu::execute() {
 		_ptr_class_container.ptr_user_manager.logout();
 		_ptr_class_container.ptr_game_manager.logout();
 	}
+	// If login fails, show error and allow user to come back and try again
 	catch (std::exception& ex) {
 		std::cout << "Error: " << ex.what() << "\n";
 		std::cout << "\nPlease try again.\n";
@@ -129,18 +132,21 @@ void RegisterMenu::execute() {
 	std::cout << "Please confirm password: ";
 	str_password_confirm = validate::validate_string(8, 256);
 
+	// Do not allow user to continue until they enter a pssword that matches the previous
 	while (str_password_confirm != obj_user.get_password()) {
 		std::cout << "Passwords do not match, please confirm password: ";
 		str_password_confirm = validate::validate_string(8, 256);
 	}
 
 	try {
+		// Add user to database
 		_ptr_class_container.ptr_user_manager.register_user(obj_user);
 
 		std::cout << "\nRegistration complete. User name is " << obj_user.get_email() << ".\n";
 
 		util::pause();
 	}
+	// If adding fails (likely matching email address), show error and allow user to try again
 	catch (std::exception& ex) {
 		std::cout << "\nCould not register: " << ex.what() << "\n";
 		std::cout << "\nPlease try again.\n";
@@ -159,6 +165,7 @@ void ViewGamesMenu::execute() {
 	int i_page_count = 0;
 
 	try {
+		// Get current games
 		_ptr_class_container.ptr_game_manager.set_admin_flag(bool_user_is_admin);
 		_ptr_class_container.ptr_game_manager.initialise_games();
 		std::vector<Game>& vec_games = _ptr_class_container.ptr_game_manager.get_vec_games();
@@ -166,6 +173,7 @@ void ViewGamesMenu::execute() {
 
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
+			// Display different options based on if user is an admin or not
 			if (bool_user_is_admin) {
 				std::cout << "Manage/Update games\n";
 				std::cout << "Use [Arrow Keys] to navigate games/pages, press [Enter] to select game to manage\n";
@@ -206,7 +214,7 @@ void ViewGamesMenu::execute() {
 				}
 
 				vec_paged_games = std::vector<Game>(vec_games.begin() + (i_current_page * 10), vec_games.begin() + i_final_item);
-
+				// Output "paged" games
 				util::for_each_iterator(vec_paged_games.begin(), vec_paged_games.end(), 0, [&](int index, Game& item) {
 					if (i_highlighted_index == index) {
 						SetConsoleTextAttribute(h_output_console, BACKGROUND_BLUE | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY);
@@ -223,6 +231,7 @@ void ViewGamesMenu::execute() {
 
 			while (!validate::get_control_char(key, h_input_console));
 
+			// Perform relevant action based on user input
 			switch (key.wVirtualKeyCode)
 			{
 			case VK_DOWN:
@@ -244,10 +253,12 @@ void ViewGamesMenu::execute() {
 				}
 				break;
 			case VK_ESCAPE:
+				// Unset filter when leaving games page
 				_ptr_class_container.ptr_game_manager.set_filter_genre(Genre());
 				_ptr_class_container.ptr_game_manager.set_initialised(false);
 				return;
 			case VK_F1:
+				// Only allow user to go to basket if they are not an admin, admins use F1 to add a game instead
 				if (!bool_user_is_admin) {
 					ViewBasketMenu("View Basket", _ptr_class_container).execute();
 					i_highlighted_index = 0;
@@ -257,6 +268,7 @@ void ViewGamesMenu::execute() {
 				}
 				break;
 			case VK_F2:
+				// Allow user/admin to select a filter option
 				SelectGenreFilterMenu("Genre Filter", _ptr_class_container).execute();
 				i_highlighted_index = 0;
 				break;
@@ -276,6 +288,7 @@ void ViewGamesMenu::execute() {
 					system("cls");
 					Game& obj_game = vec_paged_games[i_highlighted_index];
 
+					// Either manage selected game, or allow user to add to basket
 					if (bool_user_is_admin) {
 						ManageGameBaseMenu("Manage game", _ptr_class_container, obj_game).execute();
 						_ptr_class_container.ptr_game_manager.initialise_games();
@@ -296,6 +309,7 @@ void ViewGamesMenu::execute() {
 						i_copies = validate::validate_int(1, obj_game.get_copies());
 
 						try {
+							// Attempt to add selected game to basket
 							PurchaseItem obj_purchase_item = PurchaseItem(obj_game.get_id(), obj_game, i_copies, obj_game.get_price());
 							_ptr_class_container.ptr_game_manager.add_basket_item(obj_purchase_item);
 
@@ -337,6 +351,7 @@ void AddGameMenu::execute() {
 	std::cout << "Game Name: ";
 	obj_game.set_name(validate::validate_string(1, 45));
 
+	// Get user selection for genre (displays list to limit choice to only valid options
 	try {
 		KEY_EVENT_RECORD key{};
 		int i_highlighted_index = 0;
@@ -390,6 +405,7 @@ void AddGameMenu::execute() {
 		return;
 	}
 
+	// Get user selection for genre (displays list to limit user input)
 	try {
 		KEY_EVENT_RECORD key{};
 		int i_highlighted_index = 0;
@@ -454,6 +470,7 @@ void AddGameMenu::execute() {
 	obj_game.set_copies(validate::validate_int(0));
 
 	try {
+		// Attempt to add game, unset filter and re-initialise games upon success
 		_ptr_class_container.ptr_game_manager.add_game(obj_game);
 		_ptr_class_container.ptr_game_manager.set_filter_genre(Genre());
 		_ptr_class_container.ptr_game_manager.set_initialised(false);
@@ -483,6 +500,7 @@ void SelectGenreFilterMenu::execute() {
 		return;
 	}
 
+	// Display genres and allow user to select genre to filter by
 	while (key.wVirtualKeyCode != VK_RETURN) {
 		system("cls");
 		std::cout << "Select genre to filter by\nNavigate with [Arrow Keys]\nPress [F1] to clear current filter\nPress [Enter] to select choice\nPress [Esc] to cancel.\n\n";
@@ -513,12 +531,14 @@ void SelectGenreFilterMenu::execute() {
 			if (i_highlighted_index > 0) i_highlighted_index--;
 			break;
 		case VK_F1:
+			// Unset the current genre filter
 			_ptr_class_container.ptr_game_manager.set_filter_genre(Genre());
 			_ptr_class_container.ptr_game_manager.set_initialised(false);
 			_ptr_class_container.ptr_game_manager.initialise_games();
 			break;
 		case VK_RETURN:
 			if ((int)vec_genres.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+				// Set selected genre as the filter
 				Genre obj_genre = vec_genres[i_highlighted_index];
 				_ptr_class_container.ptr_game_manager.set_filter_genre(obj_genre);
 				_ptr_class_container.ptr_game_manager.set_initialised(false);
@@ -547,6 +567,7 @@ void ViewBasketMenu::execute() {
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
 	double d_basket_total = _ptr_class_container.ptr_game_manager.get_basket_total();
 
+	// Display current basket state to user
 	while (key.wVirtualKeyCode != VK_ESCAPE) {
 		system("cls");
 		std::cout << "Your current basket items\n";
@@ -595,6 +616,7 @@ void ViewBasketMenu::execute() {
 			}
 
 			try {
+				// Attempt to persist basket to database
 				_ptr_class_container.ptr_game_manager.set_basket_user(_ptr_class_container.ptr_user_manager.get_user_id());
 				std::cout << "\nPurchase successfully placed totalling " << std::setprecision(2) << _ptr_class_container.ptr_game_manager.make_purchase() << "\n";
 				std::cout << "Please go to the main menu and 'View Purchase History' to see this invoice\n\n";
@@ -617,6 +639,7 @@ void ViewBasketMenu::execute() {
 			}
 
 			if ((int)vec_basket_items.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+				// Remove basket purchase item
 				PurchaseItem obj_purchase_item = vec_basket_items[i_highlighted_index];
 				std::cout << "\nRemoving '" << obj_purchase_item.get_game().get_name() << "' from basket...\n";
 
@@ -642,6 +665,7 @@ void ViewBasketMenu::execute() {
 }
 
 void ManageGameBaseMenu::execute() {
+	// Admin options for managing a game
 	MenuContainer obj_menu_container = MenuContainer("");
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateGameNameMenu("Change name", _ptr_class_container, _obj_game)));
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateGameGenreMenu("Change genre", _ptr_class_container, _obj_game)));
@@ -666,6 +690,7 @@ void DeleteGameMenu::execute() {
 	std::cout << "NOTE: Deleting a game will not remove any purchase history that contains this game\n\n";
 	std::cout << "Press [Enter] to confirm, or [Esc] to cancel\n";
 
+	// Allow user to either confirm deletion or cancel
 	while (key.wVirtualKeyCode != VK_RETURN) {
 		while (!validate::get_control_char(key, h_input_console));
 
@@ -703,6 +728,7 @@ void UpdateGameNameMenu::execute() {
 	str_update_name = validate::validate_string(45, true);
 
 	try {
+		// Attempt to persist updated game name
 		_ptr_class_container.ptr_game_manager.update_game_name(_obj_game.get_id(), str_update_name);
 		_ptr_class_container.ptr_game_manager.set_initialised(false);
 		std::cout << "'" << _obj_game.get_name() << "' updated to '" << str_update_name << "' successfully.\n";
@@ -723,6 +749,7 @@ void UpdateGameGenreMenu::execute() {
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
 	std::vector<Genre> vec_genres;
 
+	// Try to get genres from the database
 	try {
 		vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
 	}
@@ -732,6 +759,7 @@ void UpdateGameGenreMenu::execute() {
 		return;
 	}
 
+	// Allow user to select genre to update game to, allow cancel via escape
 	while (key.wVirtualKeyCode != VK_RETURN) {
 		system("cls");
 		std::cout << "Updating game genre of '" << _obj_game.get_name() << "'\nNavigate with [Arrow Keys]\nPress [Enter] to select choice\nPress [Esc] to cancel.\n\n";
@@ -760,6 +788,7 @@ void UpdateGameGenreMenu::execute() {
 		case VK_RETURN:
 			if ((int)vec_genres.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
 				try {
+					// Attempt to persist updated game's genre
 					Genre obj_genre = vec_genres[i_highlighted_index];
 					_ptr_class_container.ptr_game_manager.update_game_genre(_obj_game.get_id(), obj_genre.get_id());
 					_ptr_class_container.ptr_game_manager.set_initialised(false);
@@ -796,6 +825,7 @@ void UpdateGamePriceMenu::execute() {
 	d_update_price = validate::validate_double(0.0);
 
 	try {
+		// Attempt to persist updated game's price
 		_ptr_class_container.ptr_game_manager.update_game_price(_obj_game.get_id(), d_update_price);
 		_ptr_class_container.ptr_game_manager.set_initialised(false);
 		std::cout << "'" << _obj_game.get_name() << "' price updated to '" << std::setprecision(2) << d_update_price << "' successfully.\n";
@@ -816,6 +846,7 @@ void UpdateGameRatingMenu::execute() {
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
 	std::vector<Rating> vec_ratings;
 
+	// Attempt to get ratings from the database
 	try {
 		vec_ratings = _ptr_class_container.ptr_game_manager.get_ratings();
 	}
@@ -825,6 +856,7 @@ void UpdateGameRatingMenu::execute() {
 		return;
 	}
 
+	// Display ratings to user and allow selection, or cancellation
 	while (key.wVirtualKeyCode != VK_RETURN) {
 		system("cls");
 		std::cout << "Updating game age rating of '" << _obj_game.get_name() << "'\nNavigate with [Arrow Keys]\nPress [Enter] to select choice\nPress [Esc] to cancel.\n\n";
@@ -853,6 +885,7 @@ void UpdateGameRatingMenu::execute() {
 		case VK_RETURN:
 			if ((int)vec_ratings.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
 				try {
+					// Attempt to persist game's new rating to database
 					Rating obj_rating = vec_ratings[i_highlighted_index];
 					_ptr_class_container.ptr_game_manager.update_game_rating(_obj_game.get_id(), obj_rating.get_id());
 					_ptr_class_container.ptr_game_manager.set_initialised(false);
@@ -889,6 +922,7 @@ void UpdateGameCopiesMenu::execute() {
 	i_update_copies = validate::validate_int(0);
 
 	try {
+		// Attempt to persist updated game's copies to the database
 		_ptr_class_container.ptr_game_manager.update_game_copies(_obj_game.get_id(), i_update_copies);
 		_ptr_class_container.ptr_game_manager.set_initialised(false);
 		std::cout << "'" << _obj_game.get_name() << "' available copies updated to '" << i_update_copies << "' successfully.\n";
@@ -911,9 +945,11 @@ void ManageGenresMenu::execute() {
 	int i_page_count = 0;
 
 	try {
+		// Get genres from database
 		std::vector<Genre> vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
 		std::vector<Genre> vec_paged_genres;
 
+		// List genres to user
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
 			std::cout << "Manage/Update genres\n";
@@ -982,6 +1018,7 @@ void ManageGenresMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
+				// Allow new genre to be added to database
 				AddGenreMenu("Add genre", _ptr_class_container).execute();
 				vec_genres = _ptr_class_container.ptr_game_manager.get_genres();
 				break;
@@ -993,6 +1030,7 @@ void ManageGenresMenu::execute() {
 				}
 
 				if ((int)vec_paged_genres.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					// Open manage menu for selected genre
 					system("cls");
 					Genre& obj_genre = vec_paged_genres[i_highlighted_index];
 
@@ -1018,6 +1056,7 @@ void ManageGenresMenu::execute() {
 }
 
 void ManageGenreBaseMenu::execute() {
+	// Menu options for managing a genre
 	MenuContainer obj_menu_container = MenuContainer("");
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateGenreNameMenu("Change name", _ptr_class_container, _obj_genre)));
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new DeleteGenreMenu("Delete genre", _ptr_class_container, _obj_genre, obj_menu_container)));
@@ -1039,6 +1078,7 @@ void AddGenreMenu::execute() {
 	obj_genre.set_genre(validate::validate_string(1, 20));
 
 	try {
+		// Attempt to persist new genre
 		_ptr_class_container.ptr_game_manager.add_genre(obj_genre);
 		std::cout << "\n'" << obj_genre.get_genre() << "' successfully added.\n";
 		util::pause();
@@ -1058,6 +1098,7 @@ void DeleteGenreMenu::execute() {
 	std::cout << "WARNING: Deleting this genre will remove ALL games that use this genre in order to preserve data integrity.\nHowever, This does not impact purchase history\n\n";
 	std::cout << "Press [Enter] to confirm, or [Esc] to cancel\n";
 
+	// Allow user to accept or cancel deletion of genre
 	while (key.wVirtualKeyCode != VK_RETURN) {
 		while (!validate::get_control_char(key, h_input_console));
 
@@ -1065,6 +1106,7 @@ void DeleteGenreMenu::execute() {
 		{
 		case VK_RETURN:
 			try {
+				// Attempt to delete genre from database
 				_ptr_class_container.ptr_game_manager.delete_genre(_obj_genre);
 				_obj_menu_container.set_exit_menu(true);
 				std::cout << "\n'" << _obj_genre.get_genre() << "' successfully deleted.\n";
@@ -1094,6 +1136,7 @@ void UpdateGenreNameMenu::execute() {
 	str_update_genre_name = validate::validate_string(1, 20);
 
 	try {
+		// Attempt to update genre's description in database
 		_ptr_class_container.ptr_game_manager.update_genre_name(_obj_genre.get_id(), str_update_genre_name);
 		std::cout << "'" << _obj_genre.get_genre() << "' updated to '" << str_update_genre_name << "' successfully.\n";
 		_obj_genre.set_genre(str_update_genre_name);
@@ -1115,10 +1158,12 @@ void ManageUsersMenu::execute() {
 	int i_page_count = 0;
 
 	try {
+		// Get users form database
 		_ptr_class_container.ptr_user_manager.fetch_users();
 		std::vector<User>& vec_users = _ptr_class_container.ptr_user_manager.get_vec_users();
 		std::vector<User> vec_paged_users;
 
+		// List users to user and allow interaction with them via option
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
 			std::cout << "Manage/Update users\n";
@@ -1190,6 +1235,7 @@ void ManageUsersMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
+				// Allow a new user to be added upon F1
 				RegisterMenu("Add user", _ptr_class_container).execute();
 				_ptr_class_container.ptr_user_manager.fetch_users();
 				vec_users = _ptr_class_container.ptr_user_manager.get_vec_users();
@@ -1202,6 +1248,7 @@ void ManageUsersMenu::execute() {
 				}
 
 				if ((int)vec_paged_users.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					// Display management menu for selected user
 					system("cls");
 					User& obj_user = vec_paged_users[i_highlighted_index];
 
@@ -1228,6 +1275,7 @@ void ManageUsersMenu::execute() {
 }
 
 void ManageUserBaseMenu::execute() {
+	// Display management options for selected user
 	MenuContainer obj_menu_container = MenuContainer("");
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserNameMenu("Update full name", _ptr_class_container, _obj_user)));
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserAgeMenu("Update age", _ptr_class_container, _obj_user)));
@@ -1243,6 +1291,7 @@ void ManageUserBaseMenu::execute() {
 }
 
 void UserUpdateOptionsMenu::execute() {
+	// Display user self-update options (an admin or user can manage their own details while logged in)
 	MenuContainer obj_menu_container = MenuContainer("Updating your account details\nChoose one of the below actions to perform against your account.\nPress [ESC] to cancel\n");
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserNameMenu("Update full name", _ptr_class_container, _obj_user)));
 	obj_menu_container.add_menu_item(std::unique_ptr<MenuItem>(new UpdateUserAgeMenu("Update age", _ptr_class_container, _obj_user)));
@@ -1263,6 +1312,7 @@ void UpdateUserNameMenu::execute() {
 	_obj_user.set_full_name(validate::validate_string(1, 30));
 
 	try {
+		// Attempt to persist user's new full name to database
 		_ptr_class_container.ptr_user_manager.update_user_fullname(_obj_user);
 		std::cout << "\nFull name updated to '" << _obj_user.get_full_name() << "' successfully.\n";
 		util::pause();
@@ -1282,6 +1332,7 @@ void UpdateUserAgeMenu::execute() {
 	_obj_user.set_age(validate::validate_int(1, 150));
 
 	try {
+		// Attempt to persist user's new age to database
 		_ptr_class_container.ptr_user_manager.update_user_age(_obj_user);
 		std::cout << "\nAge updated to '" << _obj_user.get_age() << "' successfully.\n";
 		util::pause();
@@ -1301,6 +1352,7 @@ void UpdateUserEmailMenu::execute() {
 	_obj_user.set_email(validate::validate_string(1, 45));
 
 	try {
+		// Attempt to persist user's new email to database
 		_ptr_class_container.ptr_user_manager.update_user_email(_obj_user);
 		std::cout << "\nEmail updated to '" << _obj_user.get_email() << "' successfully.\n";
 		util::pause();
@@ -1323,6 +1375,7 @@ void UpdateUserPasswordMenu::execute() {
 	std::cout << "\nPlease confirm password: ";
 	str_confirm_password = validate::validate_string(8, 256);
 
+	// Reattempt until user enters matching password
 	while (_obj_user.get_password() != str_confirm_password) {
 		std::cout << "\nPasswords do not match, please try again\n";
 		std::cout << "\nPlease confirm password: ";
@@ -1330,6 +1383,7 @@ void UpdateUserPasswordMenu::execute() {
 	}
 
 	try {
+		// Attempt to persist user's new password to database
 		_ptr_class_container.ptr_user_manager.update_user_password(_obj_user);
 		std::cout << "\nPassword updated successfully.\n";
 		util::pause();
@@ -1350,6 +1404,7 @@ void UpdateUserAdminStatusMenu::execute() {
 	std::cout << "Are you sure you want to change admin status of '" << _obj_user.get_email() << "' from " << (_obj_user.get_is_admin() ? "True" : "False") << " to " << (!_obj_user.get_is_admin() ? "True" : "False") << "?\n";
 	std::cout << "Press [Enter] to confirm, or [Esc] to cancel\n";
 
+	// Gets admin to confirm that they want to invert a users admin status from/to an admin
 	while (key.wVirtualKeyCode != VK_RETURN) {
 		while (!validate::get_control_char(key, h_input_console));
 
@@ -1357,6 +1412,7 @@ void UpdateUserAdminStatusMenu::execute() {
 		{
 		case VK_RETURN:
 			try {
+				// Attempt to persist opposite of current admin status
 				_obj_user.set_is_admin(!_obj_user.get_is_admin());
 				_ptr_class_container.ptr_user_manager.change_user_admin_status(_obj_user);
 				std::cout << "\n'" << _obj_user.get_email() << "' admin status successfully updated.\n";
@@ -1388,10 +1444,12 @@ void SelectUserPurchasesViewMenu::execute() {
 	int i_page_count = 0;
 
 	try {
+		// Get all users
 		_ptr_class_container.ptr_user_manager.fetch_users(true);
 		std::vector<User>& vec_users = _ptr_class_container.ptr_user_manager.get_vec_users();
 		std::vector<User> vec_paged_users;
 
+		// Display users to user so they can select the user who's purchases they would like to view
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
 			std::cout << "Select user who's purchases you would like to view\n";
@@ -1463,6 +1521,7 @@ void SelectUserPurchasesViewMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
+				// View summary of all user purchases
 				if (vec_users.size() > 0) AllUserPurchaseSummaryMenu("User purchases summary", _ptr_class_container, vec_users).execute();
 				break;
 			case VK_RETURN:
@@ -1473,6 +1532,7 @@ void SelectUserPurchasesViewMenu::execute() {
 				}
 
 				if ((int)vec_paged_users.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					// View an individual users purchase history
 					system("cls");
 					User& obj_user = vec_paged_users[i_highlighted_index];
 
@@ -1506,10 +1566,12 @@ void ViewUserPurchasesMenu::execute() {
 	bool bool_admin_status = _ptr_class_container.ptr_user_manager.get_current_user().get_is_admin();
 
 	try {
+		// Fetch all purchases of provided user
 		_ptr_class_container.ptr_purchase_manager.fetch_purchases(_obj_user);
 		std::vector<Purchase>& vec_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
 		std::vector<Purchase> vec_paged_purchases;
 
+		// List found purchases to user
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
 			if (bool_admin_status) {
@@ -1583,6 +1645,7 @@ void ViewUserPurchasesMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
+				// Allow summary of purchases to only be shown when there is one or more purchase
 				if (vec_purchases.size() > 0) {
 					ViewUserPurchasesSummaryMenu("Purchase summary", _ptr_class_container, _obj_user).execute();
 				}
@@ -1595,6 +1658,7 @@ void ViewUserPurchasesMenu::execute() {
 				}
 
 				if ((int)vec_paged_purchases.size() - 1 >= i_highlighted_index && i_highlighted_index >= 0) {
+					// Allow user to go into more detail, and view the individual purchase items for a Purchase
 					system("cls");
 					Purchase& obj_purchase = vec_paged_purchases[i_highlighted_index];
 
@@ -1622,9 +1686,11 @@ void ViewUserPurchaseItemsMenu::execute() {
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
 
 	try {
+		// Get purchase details for provided purchase
 		_ptr_class_container.ptr_purchase_manager.populate_purchase_details(_obj_purchase);
 		std::vector<PurchaseItem>& vec_purchase_items = _obj_purchase.get_vec_purchase_items();
 
+		// Display purchase items to user
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
 			std::cout << "Summary of purchase placed on: " << _obj_purchase.get_date() << "\n\n";
@@ -1653,6 +1719,7 @@ void ViewUserPurchaseItemsMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
+				// Allow user to save the output as a summary txt file
 				ViewUserPurchaseItemsSaveMenu("Save purchase summary", _ptr_class_container, _obj_purchase).execute();
 				break;
 			default:
@@ -1671,19 +1738,23 @@ void AllUserPurchaseSummaryMenu::execute() {
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
 
 	try {
+		// Allow summary to be viewed until user presses escape
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			double d_all_purchase_total = 0;
 			system("cls");
 			std::cout << "All user purchases summary\n";
 			std::cout << "This summary shows each user and if they have made any purchases displays each purchase with a calculated total.\nSee the end of the report for a grand total/average\n";
 
+			// Assumes users are already popualted if we've got this far
 			util::for_each_iterator(_vec_users.begin(), _vec_users.end(), 0, [&](int index, User& user) {
 				std::cout << "\nSummary for user: " << user.get_email() << "\n\n";
+				// Fetch the purchases of this user
 				_ptr_class_container.ptr_purchase_manager.fetch_purchases(user);
 				std::vector<Purchase>& vec_user_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
 
 				if (vec_user_purchases.size() > 0) {
 					std::cout << "Purchases: \n";
+					// Output all the user's purchases
 					for (Purchase& purchase : vec_user_purchases) {
 						std::cout.precision(2);
 						std::cout <<
@@ -1710,6 +1781,7 @@ void AllUserPurchaseSummaryMenu::execute() {
 				std::cout << "__________________________________________________________________________________________\n";
 				});
 
+			// Output totals
 			std::cout << "\nAll purchases total: " << d_all_purchase_total << "\n";
 			std::cout << "All purchases average: " << d_all_purchase_total / _vec_users.size() << "\n";
 
@@ -1725,6 +1797,7 @@ void AllUserPurchaseSummaryMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
+				// Allow this summary to be saved to file.
 				AllUserPurchaseSaveMenu("Save all user purchase summary", _ptr_class_container, _vec_users).execute();
 				break;
 			default:
@@ -1743,13 +1816,16 @@ void ViewUserPurchasesSummaryMenu::execute() {
 	HANDLE h_input_console = GetStdHandle(STD_INPUT_HANDLE);
 
 	try {
+		// Get all the purchases for a user
 		_ptr_class_container.ptr_purchase_manager.fetch_purchases(_obj_user);
 		std::vector<Purchase>& vec_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
 
+		// Populate the purchase items/details for each of hte purchases 
 		for (Purchase& purchase : vec_purchases) {
 			_ptr_class_container.ptr_purchase_manager.populate_purchase_details(purchase);
 		}
 
+		// List each purchase and it's purchase items/details to user
 		while (key.wVirtualKeyCode != VK_ESCAPE) {
 			system("cls");
 			std::cout << "Purchase summary for: " << _obj_user.get_email() << "\n";
@@ -1780,6 +1856,7 @@ void ViewUserPurchasesSummaryMenu::execute() {
 					std::cout << "_______________________________________________________________________________________________________\n";
 					});
 
+				// Output totals
 				std::cout << std::setprecision(2) << std::fixed << "\nPurchases grand total: " << _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total() << "\n";
 				std::cout << std::setprecision(2) << std::fixed << "Purchases grand total (Before VAT): " << _ptr_class_container.ptr_purchase_manager.get_purchase_grand_total() * 0.8 << "\n";
 				std::cout << std::setprecision(2) << std::fixed << "Average purchase total: " << _ptr_class_container.ptr_purchase_manager.get_purchase_average() << "\n";
@@ -1796,6 +1873,7 @@ void ViewUserPurchasesSummaryMenu::execute() {
 			case VK_ESCAPE:
 				return;
 			case VK_F1:
+				// Allow user to save this summary as a text file
 				if (vec_purchases.size() > 0) ViewUserPurchasesSaveMenu("Save user purchases summary", _ptr_class_container, _obj_user).execute();
 				break;
 			default:
@@ -1819,6 +1897,7 @@ void AllUserPurchaseSaveMenu::execute() {
 
 	try {
 		_ptr_class_container.ptr_purchase_manager.ensure_save_directory_exists();
+		// Repeat same output logic ans normal all user purchase summary, but this time so it can be written to a text file
 		double d_all_purchase_total = 0;
 		std::ofstream of_stream(path_file_to_write);
 
@@ -1889,6 +1968,7 @@ void ViewUserPurchasesSaveMenu::execute() {
 
 	try {
 		_ptr_class_container.ptr_purchase_manager.ensure_save_directory_exists();
+		// Repeat same logic as normal user purchases summary menu, but this time output to a file. Assume purchases have already had their details populated if we've got this far
 		std::vector<Purchase>& vec_purchases = _ptr_class_container.ptr_purchase_manager.get_vec_purchases();
 		std::ofstream of_stream(path_file_to_write);
 
@@ -1946,6 +2026,7 @@ void ViewUserPurchaseItemsSaveMenu::execute() {
 
 	try {
 		_ptr_class_container.ptr_purchase_manager.ensure_save_directory_exists();
+		// Output the same as the purchase items summary, but this time to a file, assuming that purchase items for a provided purchase have already been fetched if we've got this far.
 		std::vector<PurchaseItem>& vec_purchase_items = _obj_purchase.get_vec_purchase_items();
 		std::ofstream of_stream(path_file_to_write);
 

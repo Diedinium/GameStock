@@ -9,6 +9,7 @@ bool validate::get_control_char(KEY_EVENT_RECORD& keyRec, HANDLE& hConsole) {
 		return false; // console not found
 	}
 
+	// Loop until valid key pressed
 	for (; ; )
 	{
 		ReadConsoleInput(hConsole, &irec, 1, &cc);
@@ -16,6 +17,7 @@ bool validate::get_control_char(KEY_EVENT_RECORD& keyRec, HANDLE& hConsole) {
 		{
 			keyRec = (KEY_EVENT_RECORD&)irec.Event;
 
+			// If key press is a valid key option, return true, otherwise return false
 			for (auto& key_event : VEC_VALID_KEY_EVENTS)
 			{
 				if (keyRec.wVirtualKeyCode == key_event) return true;
@@ -40,6 +42,7 @@ std::string validate::validate_string(int min_length) {
 		std::string strMessage = "";
 		std::getline(std::cin, strInput);
 
+		// Try again until provided user input in expected format
 		if (util::is_less_than_or_equal_to(strInput.length(), (size_t)min_length)) {
 			strMessage = "To short, min length is " + std::to_string(min_length);
 			std::cout << strMessage << ", try again: ";
@@ -57,6 +60,7 @@ std::string validate::validate_string(int max_length, bool max_flag) {
 		std::string strMessage = "";
 		std::getline(std::cin, strInput);
 
+		// Try again until provided user input in expected format
 		if (util::is_more_than_or_equal_to(strInput.length(), (size_t)max_length)) {
 			strMessage = "To long, max length is " + std::to_string(max_length);
 			std::cout << strMessage << ", try again: ";
@@ -74,6 +78,7 @@ std::string validate::validate_string(int min_length, int max_length) {
 		std::string strMessage = "";
 		std::getline(std::cin, strInput);
 
+		// Try again until provided user input in expected format
 		if (util::is_more_than(strInput.length(), (size_t)max_length)) {
 			strMessage = "To long, max length is " + std::to_string(max_length);
 			std::cout << strMessage << ", try again: ";
@@ -94,10 +99,12 @@ int validate::validate_int() {
 
 	while (true) {
 		std::getline(std::cin, strInput);
+
 		try {
 			iInput = std::stoi(strInput);
 			return iInput;
 		}
+		// Try again until provided user input in expected format
 		catch (std::exception) {
 			std::cout << "Not a valid whole number: ";
 		}
@@ -120,6 +127,7 @@ int validate::validate_int(int min_size) {
 				return iInput;
 			}
 		}
+		// Try again until provided user input in expected format
 		catch (std::exception) {
 			std::cout << "Not a valid whole number: ";
 		}
@@ -142,6 +150,7 @@ int validate::validate_int(int min_size, int max_size) {
 				return iInput;
 			}
 		}
+		// Try again until provided user input in expected format
 		catch (std::exception) {
 			std::cout << "Not a valid number: ";
 		}
@@ -181,6 +190,7 @@ double validate::validate_double(double min_size) {
 				return dInput;
 			}
 		}
+		// Try again until provided user input in expected format
 		catch (std::exception) {
 			std::cout << "Not a valid number: ";
 		}

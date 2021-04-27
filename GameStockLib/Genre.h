@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 
+/// <summary>
+/// Class that is used to represent a genre
+/// </summary>
 class Genre {
 	int _i_id;
 	std::string _str_genre;

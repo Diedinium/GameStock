@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 
+/// <summary>
+/// Class used to store and represent Ratings
+/// </summary>
 class Rating {
 	int _i_id;
 	std::string _str_rating;

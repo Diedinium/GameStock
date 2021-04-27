@@ -19,6 +19,7 @@ void DatabaseManager::connect(std::string str_db_name) {
 void DatabaseManager::create_tables_if_not_exist() {
 	char* errorMessage;
 
+	// Create the tables, uses IF NOT EXISTS to ensure command can be executed without needing to worry about checking for table existance first.
 	std::string str_create_sql =
 		"PRAGMA foreign_keys = off;" \
 		"BEGIN TRANSACTION;" \
@@ -45,6 +46,7 @@ void DatabaseManager::insert_initial() {
 	_i_return_code = sqlite3_step(stmt_status);
 	sqlite3_finalize(stmt_status);
 
+	// If there is no sign of the status being present, assume database is empty and populate.
 	if (_i_return_code == SQLITE_DONE) {
 		std::string str_insert_sql =
 			"PRAGMA foreign_keys = off;" \

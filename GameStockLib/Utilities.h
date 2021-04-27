@@ -10,7 +10,21 @@
 #include "PurchaseItem.h"
 #include "User.h"
 
+/// <summary>
+/// Namespace used to contain all utility related functions, such as calculation templates, or 
+/// </summary>
 namespace util {
+	/// <summary>
+	/// Foreach operator that also contains an iterator.
+	/// Created simply because I'm lazy.
+	/// </summary>
+	/// <typeparam name="IteratorT"></typeparam>
+	/// <typeparam name="FunctionT"></typeparam>
+	/// <param name="first"></param>
+	/// <param name="last"></param>
+	/// <param name="initial"></param>
+	/// <param name="func"></param>
+	/// <returns></returns>
 	template <typename IteratorT, typename FunctionT>
 	FunctionT for_each_iterator(IteratorT first, IteratorT last, int initial, FunctionT func) {
 		for (; first != last; ++first, ++initial)

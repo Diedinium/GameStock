@@ -6,6 +6,9 @@
 #include <iomanip>
 #include "Utilities.h"
 
+/// <summary>
+/// Namespace is used to contain all user input validation/checking related functionality.
+/// </summary>
 namespace validate {
 	/// <summary>
 	/// Stores all allowed key inputs

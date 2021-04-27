@@ -30,6 +30,7 @@ Purchase::Purchase(int i_id, int i_user_id, std::vector<PurchaseItem> vec_purcha
 }
 
 int Purchase::get_total_game_copies() {
+	// Count the total number of game copies of the purchase items and return
 	return std::accumulate(_vec_purchase_items.begin(), _vec_purchase_items.end(), 0, [](int total, PurchaseItem& purchase_item) {
 		return total + purchase_item.get_count();
 	});
