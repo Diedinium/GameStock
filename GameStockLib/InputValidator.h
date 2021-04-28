@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include <regex>
 #include "Utilities.h"
 
 /// <summary>
@@ -52,6 +53,22 @@ namespace validate {
 	/// <param name="max_length"></param>
 	/// <returns></returns>
 	std::string validate_string(int min_length, int max_length);
+
+	/// <summary>
+	/// Validates that full name is within length requirements, and that it matches the expected two capital word format
+	/// </summary>
+	/// <param name="min_length"></param>
+	/// <param name="max_length"></param>
+	/// <returns></returns>
+	std::string validate_full_name(int min_length, int max_length);
+
+	/// <summary>
+	/// Validates that an email is the expected length, but also checks that the email is in fact a valid email
+	/// </summary>
+	/// <param name="min_length"></param>
+	/// <param name="max_length"></param>
+	/// <returns></returns>
+	std::string validate_email(int min_length, int max_length);
 
 	/// <summary>
 	/// Validates that user input is an integer value.

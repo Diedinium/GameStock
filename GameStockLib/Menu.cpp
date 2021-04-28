@@ -70,7 +70,7 @@ void LoginMenu::execute() {
 
 	// Get user to enter details
 	std::cout << "Please enter your email: ";
-	obj_user.set_email(validate::validate_string(0, 45));
+	obj_user.set_email(validate::validate_email(1, 45));
 
 	std::cout << "Please enter your password: ";
 	obj_user.set_password(validate::validate_string(7));
@@ -118,13 +118,13 @@ void RegisterMenu::execute() {
 	system("cls");
 	std::cout << "Follow the prompts to register a new user.\n\n";
 	std::cout << "Please enter full name: ";
-	obj_user.set_full_name(validate::validate_string(1, 30));
+	obj_user.set_full_name(validate::validate_full_name(1, 30));
 
 	std::cout << "Please enter age: ";
 	obj_user.set_age(validate::validate_int(1, 150));
 
 	std::cout << "Please enter email: ";
-	obj_user.set_email(validate::validate_string(1, 45));
+	obj_user.set_email(validate::validate_email(1, 45));
 
 	std::cout << "Please enter password: ";
 	obj_user.set_password(validate::validate_string(8, 256));
@@ -1309,7 +1309,7 @@ void UpdateUserNameMenu::execute() {
 	std::string str_previous_name = _obj_user.get_full_name();
 	std::cout << "Updating full name, current name: '" << _obj_user.get_full_name() << "'\n\n";
 	std::cout << "Please enter new full name: ";
-	_obj_user.set_full_name(validate::validate_string(1, 30));
+	_obj_user.set_full_name(validate::validate_full_name(1, 30));
 
 	try {
 		// Attempt to persist user's new full name to database
@@ -1318,7 +1318,7 @@ void UpdateUserNameMenu::execute() {
 		util::pause();
 	}
 	catch (std::exception& ex) {
-		_obj_user.set_email(str_previous_name);
+		_obj_user.set_full_name(str_previous_name);
 		std::cout << "\nError: " << ex.what() << "\n";
 		util::pause();
 	}
@@ -1349,7 +1349,7 @@ void UpdateUserEmailMenu::execute() {
 	std::string str_previous_email = _obj_user.get_email();
 	std::cout << "Updating email, current email: '" << _obj_user.get_email() << "'\nPlease note that this email must be unique\n\n";
 	std::cout << "Please enter new email: ";
-	_obj_user.set_email(validate::validate_string(1, 45));
+	_obj_user.set_email(validate::validate_email(1, 45));
 
 	try {
 		// Attempt to persist user's new email to database

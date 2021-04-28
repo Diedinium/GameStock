@@ -93,6 +93,60 @@ std::string validate::validate_string(int min_length, int max_length) {
 	}
 }
 
+std::string validate::validate_full_name(int min_length, int max_length) {
+	std::string strInput;
+	std::regex full_name_regex("[A-Z].+ [A-Z].+", std::regex_constants::ECMAScript);
+
+	while (true) {
+		std::string strMessage = "";
+		std::getline(std::cin, strInput);
+
+		// Try again until provided user input in expected format
+		if (util::is_more_than(strInput.length(), (size_t)max_length)) {
+			strMessage = "To long, max length is " + std::to_string(max_length);
+			std::cout << strMessage << ", try again: ";
+		}
+		else if (util::is_less_than(strInput.length(), (size_t)min_length)) {
+			strMessage = "To short, min length is " + std::to_string(min_length);
+			std::cout << strMessage << ", try again: ";
+		}
+		else if (!std::regex_search(strInput, full_name_regex)) {
+			strMessage = "Provided name does not match expected format, e.g. John Doe";
+			std::cout << strMessage << ", try again: ";
+		}
+		else {
+			return strInput;
+		}
+	}
+}
+
+std::string validate::validate_email(int min_length, int max_length) {
+	std::string strInput;
+	std::regex email_regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", std::regex_constants::ECMAScript);
+
+	while (true) {
+		std::string strMessage = "";
+		std::getline(std::cin, strInput);
+
+		// Try again until provided user input in expected format
+		if (util::is_more_than(strInput.length(), (size_t)max_length)) {
+			strMessage = "To long, max length is " + std::to_string(max_length);
+			std::cout << strMessage << ", try again: ";
+		}
+		else if (util::is_less_than(strInput.length(), (size_t)min_length)) {
+			strMessage = "To short, min length is " + std::to_string(min_length);
+			std::cout << strMessage << ", try again: ";
+		}
+		else if (!std::regex_search(strInput, email_regex)) {
+			strMessage = "Provided email does not match expected format, e.g. test@test.com";
+			std::cout << strMessage << ", try again: ";
+		}
+		else {
+			return strInput;
+		}
+	}
+}
+
 int validate::validate_int() {
 	std::string strInput;
 	int iInput;
