@@ -5,6 +5,7 @@
 #include <vector>
 #include <chrono>
 #include <fstream>
+#include <sstream>
 #include "Game.h"
 #include "Purchase.h"
 #include "PurchaseItem.h"
